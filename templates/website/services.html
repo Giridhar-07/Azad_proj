@@ -1,0 +1,912 @@
+{% extends 'base.html' %}
+
+{% block title %}Our Services - Azayd IT Solutions{% endblock %}
+
+{% block content %}
+<!-- Services Hero Section -->
+<section class="services-hero">
+    <div class="container">
+        <div class="services-hero-content" data-aos="fade-up">
+            <h1>Our <span class="gradient-text">Services</span></h1>
+            <p>Comprehensive IT solutions designed to accelerate your business growth and digital transformation</p>
+        </div>
+        <div class="services-3d-showcase" id="services-3d-showcase"></div>
+    </div>
+</section>
+
+<!-- Services Grid -->
+<section class="services-grid-section">
+    <div class="container">
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card-advanced" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:"100" }}">
+                <div class="service-card-header">
+                    <div class="service-icon-3d" data-service="{{ service.title|slugify }}">
+                        <i class="fas fa-{{ service.icon }}"></i>
+                    </div>
+                    <h3>{{ service.title }}</h3>
+                    <div class="service-price">Starting at ${{ service.price|default:'1,999' }}</div>
+                </div>
+                <div class="service-description">
+                    <p>{{ service.description }}</p>
+                </div>
+                {% if service.image %}
+                <div class="service-image">
+                    <img src="{{ service.image.url }}" alt="{{ service.title }}">
+                </div>
+                {% endif %}
+                <div class="service-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Custom Solutions</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Expert Team</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Agile Development</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>24/7 Support</span>
+                    </div>
+                </div>
+                <div class="service-tech-stack">
+                    <span class="tech-tag">{{ service.tech_stack|default:'Modern Tech' }}</span>
+                </div>
+                <div class="service-actions">
+                    <a href="{% url 'website:contact' %}" class="btn-service-primary">Get Quote</a>
+                    <button class="btn-service-secondary" onclick="showServiceDetails('{{ service.title|slugify }}')">Learn More</button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="no-services-message">
+                <p>No services available at the moment.</p>
+            </div>
+            {% endfor %}
+                <div class="service-tech-stack">
+                    <span class="tech-tag">React</span>
+                    <span class="tech-tag">Django</span>
+                    <span class="tech-tag">Node.js</span>
+                    <span class="tech-tag">TypeScript</span>
+                </div>
+                <div class="service-actions">
+                    <a href="{% url 'website:contact' %}" class="btn-service-primary">Get Quote</a>
+                    <button class="btn-service-secondary" onclick="showServiceDetails('web')">Learn More</button>
+                </div>
+            </div>
+
+            <!-- Mobile Development -->
+            <div class="service-card-advanced" data-aos="fade-up" data-aos-delay="200">
+                <div class="service-card-header">
+                    <div class="service-icon-3d" data-service="mobile">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Mobile Development</h3>
+                    <div class="service-price">Starting at $4,999</div>
+                </div>
+                <div class="service-description">
+                    <p>Native and cross-platform mobile applications for iOS and Android with exceptional user experience.</p>
+                </div>
+                <div class="service-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Cross-platform</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Native Performance</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>App Store Ready</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Push Notifications</span>
+                    </div>
+                </div>
+                <div class="service-tech-stack">
+                    <span class="tech-tag">React Native</span>
+                    <span class="tech-tag">Flutter</span>
+                    <span class="tech-tag">Swift</span>
+                    <span class="tech-tag">Kotlin</span>
+                </div>
+                <div class="service-actions">
+                    <a href="{% url 'website:contact' %}" class="btn-service-primary">Get Quote</a>
+                    <button class="btn-service-secondary" onclick="showServiceDetails('mobile')">Learn More</button>
+                </div>
+            </div>
+
+            <!-- Cloud Solutions -->
+            <div class="service-card-advanced" data-aos="fade-up" data-aos-delay="300">
+                <div class="service-card-header">
+                    <div class="service-icon-3d" data-service="cloud">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h3>Cloud Solutions</h3>
+                    <div class="service-price">Starting at $1,999</div>
+                </div>
+                <div class="service-description">
+                    <p>Scalable cloud infrastructure and migration services to modernize your business operations.</p>
+                </div>
+                <div class="service-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Auto Scaling</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>High Availability</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Cost Optimization</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>24/7 Monitoring</span>
+                    </div>
+                </div>
+                <div class="service-tech-stack">
+                    <span class="tech-tag">AWS</span>
+                    <span class="tech-tag">Azure</span>
+                    <span class="tech-tag">Docker</span>
+                    <span class="tech-tag">Kubernetes</span>
+                </div>
+                <div class="service-actions">
+                    <a href="{% url 'website:contact' %}" class="btn-service-primary">Get Quote</a>
+                    <button class="btn-service-secondary" onclick="showServiceDetails('cloud')">Learn More</button>
+                </div>
+            </div>
+
+            <!-- AI & Machine Learning -->
+            <div class="service-card-advanced" data-aos="fade-up" data-aos-delay="400">
+                <div class="service-card-header">
+                    <div class="service-icon-3d" data-service="ai">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>AI & Machine Learning</h3>
+                    <div class="service-price">Starting at $7,999</div>
+                </div>
+                <div class="service-description">
+                    <p>Intelligent solutions powered by artificial intelligence and machine learning algorithms.</p>
+                </div>
+                <div class="service-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Predictive Analytics</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Natural Language Processing</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Computer Vision</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Custom Models</span>
+                    </div>
+                </div>
+                <div class="service-tech-stack">
+                    <span class="tech-tag">Python</span>
+                    <span class="tech-tag">TensorFlow</span>
+                    <span class="tech-tag">PyTorch</span>
+                    <span class="tech-tag">OpenAI</span>
+                </div>
+                <div class="service-actions">
+                    <a href="{% url 'website:contact' %}" class="btn-service-primary">Get Quote</a>
+                    <button class="btn-service-secondary" onclick="showServiceDetails('ai')">Learn More</button>
+                </div>
+            </div>
+
+            <!-- DevOps & Automation -->
+            <div class="service-card-advanced" data-aos="fade-up" data-aos-delay="500">
+                <div class="service-card-header">
+                    <div class="service-icon-3d" data-service="devops">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3>DevOps & Automation</h3>
+                    <div class="service-price">Starting at $3,499</div>
+                </div>
+                <div class="service-description">
+                    <p>Streamline your development and deployment processes with modern DevOps practices.</p>
+                </div>
+                <div class="service-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>CI/CD Pipelines</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Infrastructure as Code</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Automated Testing</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Monitoring & Alerts</span>
+                    </div>
+                </div>
+                <div class="service-tech-stack">
+                    <span class="tech-tag">Jenkins</span>
+                    <span class="tech-tag">GitLab CI</span>
+                    <span class="tech-tag">Terraform</span>
+                    <span class="tech-tag">Ansible</span>
+                </div>
+                <div class="service-actions">
+                    <a href="{% url 'website:contact' %}" class="btn-service-primary">Get Quote</a>
+                    <button class="btn-service-secondary" onclick="showServiceDetails('devops')">Learn More</button>
+                </div>
+            </div>
+
+            <!-- Cybersecurity -->
+            <div class="service-card-advanced" data-aos="fade-up" data-aos-delay="600">
+                <div class="service-card-header">
+                    <div class="service-icon-3d" data-service="security">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Cybersecurity</h3>
+                    <div class="service-price">Starting at $2,499</div>
+                </div>
+                <div class="service-description">
+                    <p>Comprehensive security solutions to protect your digital assets and ensure compliance.</p>
+                </div>
+                <div class="service-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Vulnerability Assessment</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Penetration Testing</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Security Audits</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Compliance Support</span>
+                    </div>
+                </div>
+                <div class="service-tech-stack">
+                    <span class="tech-tag">OWASP</span>
+                    <span class="tech-tag">Nessus</span>
+                    <span class="tech-tag">Metasploit</span>
+                    <span class="tech-tag">Wireshark</span>
+                </div>
+                <div class="service-actions">
+                    <a href="{% url 'website:contact' %}" class="btn-service-primary">Get Quote</a>
+                    <button class="btn-service-secondary" onclick="showServiceDetails('security')">Learn More</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Process Section -->
+<section class="process-section">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Our <span class="gradient-text">Process</span></h2>
+            <p>A proven methodology that ensures successful project delivery</p>
+        </div>
+        
+        <div class="process-timeline">
+            <div class="process-step" data-aos="fade-right" data-aos-delay="100">
+                <div class="process-number">01</div>
+                <div class="process-content">
+                    <h3>Discovery & Planning</h3>
+                    <p>We analyze your requirements, understand your business goals, and create a comprehensive project plan.</p>
+                </div>
+            </div>
+            
+            <div class="process-step" data-aos="fade-left" data-aos-delay="200">
+                <div class="process-number">02</div>
+                <div class="process-content">
+                    <h3>Design & Architecture</h3>
+                    <p>Our team designs the solution architecture and creates detailed mockups and prototypes.</p>
+                </div>
+            </div>
+            
+            <div class="process-step" data-aos="fade-right" data-aos-delay="300">
+                <div class="process-number">03</div>
+                <div class="process-content">
+                    <h3>Development & Testing</h3>
+                    <p>We build your solution using agile methodologies with continuous testing and quality assurance.</p>
+                </div>
+            </div>
+            
+            <div class="process-step" data-aos="fade-left" data-aos-delay="400">
+                <div class="process-number">04</div>
+                <div class="process-content">
+                    <h3>Deployment & Support</h3>
+                    <p>We deploy your solution and provide ongoing support and maintenance to ensure optimal performance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Service Details Modal -->
+<div id="service-modal" class="service-modal">
+    <div class="service-modal-content">
+        <span class="service-modal-close">&times;</span>
+        <div id="service-modal-body">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<style>
+/* Services Hero */
+.services-hero {
+    padding: 6rem 0 4rem;
+    background: var(--primary-gradient);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.services-hero-content {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.services-hero h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+}
+
+.services-hero p {
+    font-size: 1.3rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.services-3d-showcase {
+    height: 300px;
+    position: relative;
+}
+
+/* Services Grid */
+.services-grid-section {
+    padding: 6rem 0;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 3rem;
+}
+
+.service-card-advanced {
+    background: white;
+    border-radius: 25px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-soft);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.service-card-advanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--primary-gradient);
+    transform: scaleX(0);
+    transition: var(--transition);
+}
+
+.service-card-advanced:hover::before {
+    transform: scaleX(1);
+}
+
+.service-card-advanced:hover {
+    transform: translateY(-15px);
+    box-shadow: var(--shadow-strong);
+}
+
+.service-card-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.service-icon-3d {
+    width: 100px;
+    height: 100px;
+    background: var(--primary-gradient);
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2.5rem;
+    color: white;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.service-icon-3d:hover {
+    transform: rotateY(360deg);
+}
+
+.service-icon-3d::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+
+.service-card-header h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.service-price {
+    font-size: 1.2rem;
+    font-weight: 600;
+    background: var(--secondary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.service-description {
+    margin-bottom: 2rem;
+}
+
+.service-description p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.service-features {
+    margin-bottom: 2rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.feature-item i {
+    color: #4facfe;
+    font-size: 0.9rem;
+}
+
+.feature-item span {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.service-tech-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.tech-tag {
+    background: var(--accent-gradient);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.service-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-service-primary,
+.btn-service-secondary {
+    flex: 1;
+    min-width: 120px;
+    padding: 1rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-service-primary {
+    background: var(--secondary-gradient);
+    color: white;
+    box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+}
+
+.btn-service-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(240, 147, 251, 0.6);
+}
+
+.btn-service-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.btn-service-secondary:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: rgba(102, 126, 234, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Process Section */
+.process-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.process-timeline {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.process-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.process-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 2rem;
+    top: 4rem;
+    width: 2px;
+    height: 3rem;
+    background: var(--primary-gradient);
+    opacity: 0.3;
+}
+
+.process-number {
+    width: 4rem;
+    height: 4rem;
+    background: var(--primary-gradient);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.process-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.8rem;
+}
+
+.process-content p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Service Modal */
+.service-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.service-modal-content {
+    background: white;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 25px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.service-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.service-modal-close:hover {
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .services-hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .service-card-advanced {
+        padding: 2rem;
+    }
+    
+    .service-actions {
+        flex-direction: column;
+    }
+    
+    .process-step {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .process-step::after {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .services-hero {
+        padding: 4rem 0 2rem;
+    }
+    
+    .services-hero h1 {
+        font-size: 2rem;
+    }
+    
+    .service-card-advanced {
+        padding: 1.5rem;
+    }
+    
+    .service-icon-3d {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 3D Services Showcase
+    class Services3D {
+        constructor() {
+            this.container = document.getElementById('services-3d-showcase');
+            if (!this.container) return;
+            
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(75, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+            this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            
+            this.init();
+            this.createServices();
+            this.animate();
+            this.handleResize();
+        }
+
+        init() {
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.container.appendChild(this.renderer.domElement);
+            this.camera.position.z = 8;
+        }
+
+        createServices() {
+            const services = [
+                { color: 0x667eea, position: [-3, 1, 0] },
+                { color: 0xf093fb, position: [0, 1, 0] },
+                { color: 0x4facfe, position: [3, 1, 0] },
+                { color: 0x764ba2, position: [-1.5, -1, 0] },
+                { color: 0xf5576c, position: [1.5, -1, 0] }
+            ];
+
+            this.serviceObjects = [];
+
+            services.forEach((service, index) => {
+                const geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+                const material = new THREE.MeshBasicMaterial({
+                    color: service.color,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(...service.position);
+                
+                // Add wireframe
+                const wireframe = new THREE.WireframeGeometry(geometry);
+                const line = new THREE.LineSegments(wireframe);
+                line.material.color.setHex(service.color);
+                line.material.transparent = true;
+                line.material.opacity = 0.3;
+                line.position.set(...service.position);
+                
+                this.scene.add(cube);
+                this.scene.add(line);
+                this.serviceObjects.push({ cube, line });
+            });
+        }
+
+        animate() {
+            requestAnimationFrame(() => this.animate());
+            
+            this.serviceObjects.forEach((obj, index) => {
+                obj.cube.rotation.x += 0.005 + index * 0.001;
+                obj.cube.rotation.y += 0.01 + index * 0.002;
+                obj.line.rotation.x += 0.005 + index * 0.001;
+                obj.line.rotation.y += 0.01 + index * 0.002;
+            });
+            
+            this.renderer.render(this.scene, this.camera);
+        }
+
+        handleResize() {
+            window.addEventListener('resize', () => {
+                if (!this.container) return;
+                this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            });
+        }
+    }
+
+    new Services3D();
+
+    // Service icon 3D hover effects
+    document.querySelectorAll('.service-icon-3d').forEach(icon => {
+        icon.addEventListener('mouseenter', function() {
+            gsap.to(this, {
+                rotationY: 360,
+                duration: 0.8,
+                ease: 'power2.out'
+            });
+        });
+    });
+});
+</script>
+    {% endblock %}
+
+<script>
+// Service Details Modal
+function showServiceDetails(serviceType) {
+    const modal = document.getElementById('service-modal');
+    const modalBody = document.getElementById('service-modal-body'); }
+</script>
+
+    
+    const serviceDetails = {
+        web: {
+            title: 'Web Development Services',
+            description: 'Comprehensive web development solutions tailored to your business needs.',
+            details: [
+                'Custom Web Applications',
+                'E-commerce Solutions',
+                'Content Management Systems',
+                'Progressive Web Apps (PWA)',
+                'API Development & Integration',
+                'Performance Optimization'
+            ],
+            timeline: '4-12 weeks',
+            support: '6 months free support'
+        },
+        mobile: {
+            title: 'Mobile Development Services',
+            description: 'Native and cross-platform mobile applications for iOS and Android.',
+            details: [
+                'iOS & Android Apps',
+                'Cross-platform Development',
+                'App Store Optimization',
+                'Push Notifications',
+                'In-app Purchases',
+                'Analytics Integration'
+            ],
+            timeline: '6-16 weeks',
+            support: '12 months free support'
+        },
+        cloud: {
+            title: 'Cloud Solutions',
+            description: 'Scalable cloud infrastructure and migration services.',
+            details: [
+                'Cloud Migration',
+                'Infrastructure Setup',
+                'Auto-scaling Configuration',
+                'Backup & Disaster Recovery',
+                'Cost Optimization',
+                'Security Implementation'
+            ],
+            timeline: '2-8 weeks',
+            support: 'Ongoing monitoring'
+        },
+        ai: {
+            title: 'AI & Machine Learning',
+            description: 'Intelligent solutions powered by artificial intelligence.',
+            details: [
+                'Custom AI Models',
+                'Natural Language Processing',
+                'Computer Vision',
+                'Predictive Analytics',
+                'Chatbot Development',
+                'Data Analysis'
+            ],
+            timeline: '8-20 weeks',
+            support: 'Model maintenance'
+        },
+        devops: {
+            title: 'DevOps & Automation',
+            description: 'Streamline your development and deployment processes.',
+            details: [
+                'CI/CD Pipeline Setup',
+                'Infrastructure as Code',
+                'Automated Testing',
+                'Container Orchestration',
+                'Monitoring & Logging',
+                'Security Automation'
+            ],
+            timeline: '3-10 weeks',
+            support: 'Ongoing optimization'
+        },
+        security: {
+            title: 'Cybersecurity Services',
+            description: 'Comprehensive security solutions'
+        }
+    };
