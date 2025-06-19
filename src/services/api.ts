@@ -1,8 +1,12 @@
 import axios from 'axios';
+import { mockApiService } from './mockApiService';
 
 // Configure axios defaults
 axios.defaults.baseURL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+// Flag to determine if we should use mock data
+const USE_MOCK_DATA = true; // Set to true to use mock data, false to use real API
 
 // Add CSRF token for Django
 const getCsrfToken = (): string | null => {
