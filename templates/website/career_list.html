@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Careers at Azayd IT - Join Our Team{% endblock %}
+
+{% block content %}
+<section class="careers-hero" data-aos="fade-up">
+    <div class="container">
+        <h1 class="section-title">Join Our Team</h1>
+        <p class="section-subtitle">Build the future of technology with us</p>
+    </div>
+</section>
+
+<section class="careers-content">
+    <div class="container">
+        <div class="careers-grid">
+            {% if jobs %}
+                {% for job in jobs %}
+                    <div class="job-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter|multiply:100 }}">
+                        <div class="job-card__header">
+                            <h3 class="job-card__title">{{ job.title }}</h3>
+                            <span class="job-card__department">{{ job.department }}</span>
+                        </div>
+                        <div class="job-card__body">
+                            <div class="job-card__location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ job.location }}</span>
+                            </div>
+                            <p class="job-card__description">{{ job.description|truncatewords:30 }}</p>
+                        </div>
+                        <div class="job-card__footer">
+                            <a href="{% url 'website:job_detail' job.slug %}" class="btn btn-primary">Learn More</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-jobs-message" data-aos="fade-up">
+                    <i class="fas fa-briefcase"></i>
+                    <h3>No Open Positions</h3>
+                    <p>We don't have any open positions right now, but we're always looking for talented individuals. Feel free to send your resume to <a href="mailto:careers@azayd.com">careers@azayd.com</a></p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="why-join-us" data-aos="fade-up">
+    <div class="container">
+        <h2 class="section-title">Why Join Us?</h2>
+        <div class="benefits-grid">
+            <div class="benefit-card" data-aos="fade-up" data-aos-delay="100">
+                <i class="fas fa-rocket"></i>
+                <h3>Innovation First</h3>
+                <p>Work on cutting-edge technologies and shape the future of digital transformation</p>
+            </div>
+            <div class="benefit-card" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-users"></i>
+                <h3>Great Culture</h3>
+                <p>Join a diverse team of passionate professionals in an inclusive workplace</p>
+            </div>
+            <div class="benefit-card" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-chart-line"></i>
+                <h3>Growth Opportunities</h3>
+                <p>Continuous learning and career advancement opportunities</p>
+            </div>
+            <div class="benefit-card" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-heart"></i>
+                <h3>Work-Life Balance</h3>
+                <p>Flexible work arrangements and comprehensive benefits package</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

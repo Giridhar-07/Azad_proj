@@ -1,6 +1,7 @@
 import { Security } from '../utils/security';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { findLocalResponse } from '../utils/localResponses';
+import { OpenRouterAPI } from '../utils/openRouterApi';
+
 export class Chatbot {
   private container!: HTMLElement;
   private messages!: HTMLElement;
@@ -9,24 +10,19 @@ export class Chatbot {
   private maxRetries: number = 3;
   private retryDelay: number = 1000;
   private isWaitingForResponse: boolean = false;
-  private genAI!: GoogleGenerativeAI;
-  private model: any;
+  private streamingResponse: boolean = false;
+  private currentMessageElement: HTMLElement | null = null;
+  private scene: any;
+  private camera: any;
+  private renderer: any;
+  private cube: any;
+  private animationFrameId: number | null = null;
 
   constructor() {
     this.initializeUI();
     this.setupEventListeners();
     this.initializeAnimations();
-    this.initializeGemini();
-  }
-
-  private initializeGemini(): void {
-    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!API_KEY) {
-      console.error('Gemini API key not found');
-      return;
-    }
-    this.genAI = new GoogleGenerativeAI(API_KEY);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+    this.initialize3D();
   }
 
   private async handleAIResponse(message: string, retryCount = 0): Promise<string> {
@@ -35,34 +31,21 @@ export class Chatbot {
     }
 
     this.isWaitingForResponse = true;
+    this.streamingResponse = true;
 
     try {
       // First, check for local responses
       const localResponse = findLocalResponse(message);
       if (localResponse) {
-        return localResponse;
+        return this.simulateStreamingResponse(localResponse);
       }
 
-      // If Gemini is available, use it
-      if (this.model) {
-        const context = `You are an IT consulting assistant for Azayd IT Consulting. 
-          Previous conversation: ${this.prepareConversationContext(message)}
-          
-          Respond professionally and concisely about our IT services.
-          Current question: ${message}`;
-
-        const result = await this.model.generateContent(context);
-        const response = await result.response;
-        const text = response.text();
-
-        if (text && text.length > 0) {
-          this.updateConversationHistory('assistant', text);
-          return text;
-        }
-      }
-
-      // If we reach here, use local fallback
-      return this.getFallbackResponse(message);
+      // Prepare conversation context
+      this.updateConversationHistory('user', message);
+      const messages = OpenRouterAPI.prepareConversationContext(this.conversationHistory);
+      
+      // Get streaming response
+      return await OpenRouterAPI.generateResponse(messages);
 
     } catch (error: any) {
       console.error('AI response error:', error);
@@ -76,6 +59,34 @@ export class Chatbot {
 
     } finally {
       this.isWaitingForResponse = false;
+      this.streamingResponse = false;
+    }
+  }
+
+  private async simulateStreamingResponse(response: string): Promise<string> {
+    // Simulate streaming for local responses
+    return new Promise((resolve) => {
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < response.length) {
+          const chunk = response.charAt(index);
+          this.appendToCurrentMessage(chunk);
+          index++;
+        } else {
+          clearInterval(interval);
+          resolve(response);
+        }
+      }, 20); // Adjust speed as needed
+    });
+  }
+
+  private appendToCurrentMessage(text: string): void {
+    if (!this.currentMessageElement) return;
+    
+    const contentDiv = this.currentMessageElement.querySelector('.chatbot__message-content');
+    if (contentDiv) {
+      contentDiv.textContent += text;
+      this.messages.scrollTop = this.messages.scrollHeight;
     }
   }
 
@@ -88,14 +99,6 @@ export class Chatbot {
     return "I apologize, but I'm currently experiencing connectivity issues. " +
            "Please email us at contact@azayd.com or call us at +91 XXXXXXXXXX " +
            "for immediate assistance. Alternatively, you can try rephrasing your question.";
-  }
-
-  private prepareConversationContext(message: string): string {
-    this.updateConversationHistory('user', message);
-    return this.conversationHistory
-      .slice(-4)
-      .map(msg => `${msg.role}: ${msg.content}`)
-      .join('\n');
   }
 
   private updateConversationHistory(role: string, content: string): void {
@@ -149,10 +152,17 @@ export class Chatbot {
         input.disabled = true;
         
         this.showTypingIndicator();
-        const aiResponse = await this.handleAIResponse(message);
+        this.currentMessageElement = this.createEmptyBotMessage();
         this.hideTypingIndicator();
         
-        this.addMessage('bot', aiResponse);
+        try {
+          await this.handleAIResponse(message);
+          this.updateConversationHistory('assistant', this.currentMessageElement?.querySelector('.chatbot__message-content')?.textContent || '');
+        } catch (error) {
+          console.error('Error handling AI response:', error);
+          this.appendToCurrentMessage('\n\nI apologize, but I encountered an error. Please try again.');
+        }
+        
         input.disabled = false;
         input.focus();
       }
@@ -167,7 +177,42 @@ export class Chatbot {
       this.addMessage('bot', 'Hello! How can I assist you today with our IT consulting services?');
       const input = this.container.querySelector('.chatbot__input') as HTMLInputElement;
       setTimeout(() => input?.focus(), 300);
+      this.startAnimation();
+    } else {
+      this.stopAnimation();
     }
+  }
+
+  private createEmptyBotMessage(): HTMLElement {
+    const messageEl = document.createElement('div');
+    messageEl.className = `chatbot__message chatbot__message--bot`;
+    
+    messageEl.innerHTML = `
+      <div class="chatbot__message-avatar">
+        <lottie-player
+          src="https://assets9.lottiefiles.com/packages/lf20_xyadoh9h.json"
+          background="transparent"
+          speed="1"
+          style="width: 24px; height: 24px;"
+          loop
+          autoplay
+        ></lottie-player>
+      </div>
+      <div class="chatbot__message-content"></div>
+    `;
+
+    messageEl.style.opacity = '0';
+    messageEl.style.transform = 'translateY(20px)';
+    this.messages.appendChild(messageEl);
+
+    requestAnimationFrame(() => {
+      messageEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      messageEl.style.opacity = '1';
+      messageEl.style.transform = 'translateY(0)';
+    });
+
+    this.messages.scrollTop = this.messages.scrollHeight;
+    return messageEl;
   }
 
   private addMessage(type: 'user' | 'bot', content: string): void {
@@ -210,14 +255,10 @@ export class Chatbot {
     this.container.className = 'chatbot';
     this.container.innerHTML = `
       <button class="chatbot__toggle" aria-label="Toggle chat">
-        <lottie-player
-          src="https://assets5.lottiefiles.com/packages/lf20_u25cckyh.json"
-          background="transparent"
-          speed="1"
-          style="width: 40px; height: 40px;"
-          loop
-          autoplay
-        ></lottie-player>
+        <div class="chatbot__toggle-3d">
+          <canvas class="chatbot__canvas"></canvas>
+        </div>
+        <span>Chat with AI</span>
       </button>
       <div class="chatbot__window">
         <div class="chatbot__header">
@@ -266,12 +307,115 @@ export class Chatbot {
 
     document.body.appendChild(this.container);
     this.messages = this.container.querySelector('.chatbot__messages')!;
+
+    // Add custom styles for 3D toggle button
+    const style = document.createElement('style');
+    style.textContent = `
+      .chatbot__toggle {
+        width: auto;
+        height: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 1rem 0.5rem 0.5rem;
+        border-radius: 50px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      }
+      
+      .chatbot__toggle-3d {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .chatbot__canvas {
+        width: 100%;
+        height: 100%;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  private initialize3D(): void {
+    // Import Three.js dynamically
+    const THREE = (window as any).THREE;
+    if (!THREE) {
+      console.error('Three.js not found');
+      return;
+    }
+
+    const canvas = this.container.querySelector('.chatbot__canvas');
+    if (!canvas) return;
+
+    // Create scene
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    this.renderer = new THREE.WebGLRenderer({ 
+      canvas: canvas,
+      alpha: true,
+      antialias: true
+    });
+    this.renderer.setSize(40, 40);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Create cube with gradient material
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const materials = [
+      new THREE.MeshBasicMaterial({ color: 0x667eea }),
+      new THREE.MeshBasicMaterial({ color: 0x764ba2 }),
+      new THREE.MeshBasicMaterial({ color: 0xf093fb }),
+      new THREE.MeshBasicMaterial({ color: 0xf5576c }),
+      new THREE.MeshBasicMaterial({ color: 0x4facfe }),
+      new THREE.MeshBasicMaterial({ color: 0x00f2fe })
+    ];
+
+    this.cube = new THREE.Mesh(geometry, materials);
+    this.scene.add(this.cube);
+    this.camera.position.z = 2.5;
+
+    // Add wireframe
+    const wireframe = new THREE.WireframeGeometry(geometry);
+    const line = new THREE.LineSegments(wireframe);
+    line.material.color.setHex(0xffffff);
+    line.material.transparent = true;
+    line.material.opacity = 0.3;
+    this.scene.add(line);
+
+    // Initial render
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  private startAnimation(): void {
+    if (this.animationFrameId) return;
+
+    const animate = () => {
+      this.animationFrameId = requestAnimationFrame(animate);
+      
+      if (this.cube) {
+        this.cube.rotation.x += 0.01;
+        this.cube.rotation.y += 0.01;
+        
+        this.renderer.render(this.scene, this.camera);
+      }
+    };
+
+    animate();
+  }
+
+  private stopAnimation(): void {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
 
   private initializeAnimations(): void {
     const toggle = this.container.querySelector('.chatbot__toggle');
     if (toggle) {
       toggle.addEventListener('mouseenter', () => {
+        this.startAnimation();
         const lottiePlayer = toggle.querySelector('lottie-player');
         if (lottiePlayer) {
           lottiePlayer.setAttribute('speed', '1.5');
@@ -279,6 +423,9 @@ export class Chatbot {
       });
 
       toggle.addEventListener('mouseleave', () => {
+        if (!this.isOpen) {
+          this.stopAnimation();
+        }
         const lottiePlayer = toggle.querySelector('lottie-player');
         if (lottiePlayer) {
           lottiePlayer.setAttribute('speed', '1');

@@ -8,8 +8,8 @@ export class AnimatedLogo {
   private container: HTMLElement;
   private particles!: THREE.Points;
 
-  constructor() {
-    this.container = document.getElementById('container')!;
+  constructor(container: HTMLElement) {
+    this.container = container;
     this.scene = new THREE.Scene();
     
     // Wait for container to have dimensions
