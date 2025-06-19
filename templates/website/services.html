@@ -822,18 +822,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-});
-</script>
-    {% endblock %}
 
-<script>
-// Service Details Modal
-function showServiceDetails(serviceType) {
-    const modal = document.getElementById('service-modal');
-    const modalBody = document.getElementById('service-modal-body'); }
-</script>
-
-    
+    // Service Details Modal
     const serviceDetails = {
         web: {
             title: 'Web Development Services',
@@ -898,15 +888,79 @@ function showServiceDetails(serviceType) {
                 'CI/CD Pipeline Setup',
                 'Infrastructure as Code',
                 'Automated Testing',
+                'Monitoring & Alerting',
                 'Container Orchestration',
-                'Monitoring & Logging',
-                'Security Automation'
+                'Performance Optimization'
             ],
-            timeline: '3-10 weeks',
-            support: 'Ongoing optimization'
+            timeline: '2-6 weeks',
+            support: 'Continuous improvement'
         },
         security: {
             title: 'Cybersecurity Services',
-            description: 'Comprehensive security solutions'
+            description: 'Comprehensive security solutions to protect your digital assets.',
+            details: [
+                'Security Audits',
+                'Penetration Testing',
+                'Vulnerability Assessment',
+                'Security Training',
+                'Compliance Consulting',
+                'Incident Response Planning'
+            ],
+            timeline: '1-4 weeks',
+            support: 'Regular security updates'
         }
     };
+
+    function showServiceDetails(serviceType) {
+        const modal = document.getElementById('service-modal');
+        const modalBody = document.getElementById('service-modal-body');
+        const service = serviceDetails[serviceType];
+        
+        if (!service) return;
+        
+        let detailsHTML = `
+            <h2>${service.title}</h2>
+            <p class="service-modal-description">${service.description}</p>
+            <div class="service-modal-features">
+                <h3>What We Offer</h3>
+                <ul>
+                    ${service.details.map(detail => `<li>${detail}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="service-modal-info">
+                <div class="info-item">
+                    <strong>Timeline:</strong> ${service.timeline}
+                </div>
+                <div class="info-item">
+                    <strong>Support:</strong> ${service.support}
+                </div>
+            </div>
+            <div class="service-modal-cta">
+                <a href="{% url 'website:contact' %}" class="btn-primary">Get a Quote</a>
+            </div>
+        `;
+        
+        modalBody.innerHTML = detailsHTML;
+        modal.style.display = 'flex';
+        
+        // Close modal when clicking the close button
+        document.querySelector('.service-modal-close').addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // Make the function globally available
+    window.showServiceDetails = showServiceDetails;
+});
+</script>
+{% endblock %}
+</html>
+
+    

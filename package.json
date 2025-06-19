@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "start": "tsc && node dist/src/pages/services.js"
+    "start": "tsc && node dist/src/pages/service.js"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
