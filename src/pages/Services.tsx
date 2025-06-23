@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, useScroll as useFramerScroll, useTransform } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion, useScroll as useFramerScroll, useTransform, AnimatePresence } from 'framer-motion';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { apiService, Service as ServiceType } from '../services/api';
