@@ -1,6 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
+import { Canvas } from '@react-three/fiber';
+import { Environment, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
+import { apiService } from '../services/api';
+import '../styles/careers.css';
+import TechSphere from '../components/TechSphere';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+  }
+};
+
+const fadeInLeft = {
+  hidden: { opacity: 0, x: -50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+  }
+};
+
+const fadeInRight = {
+  hidden: { opacity: 0, x: 50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+  }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const scaleIn = {
+  hidden: { scale: 0.8, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15
+    }
+  }
+};
+
+const heroVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 1.2,
+      ease: 'easeOut'
+    }
+  }
+};
+
+const jobCardAnimation = {
+  hidden: { y: 30, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15
+    }
+  },
+  hover: {
+    y: -5,
+    scale: 1.02,
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+    transition: {
+      type: 'spring',
+      stiffness: 400,
+      damping: 10
+    }
+  }
+};
 
 interface JobPosting {
   id: number;
@@ -19,11 +110,22 @@ const Careers: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(null);
   const [filterDepartment, setFilterDepartment] = useState<string>('all');
+  const [activeSection, setActiveSection] = useState('');
+
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start']
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   useEffect(() => {
     AOS.init({
       duration: 1000,
-      once: true
+      once: true,
+      easing: 'ease-out-cubic'
     });
 
     fetchJobs();
@@ -31,10 +133,10 @@ const Careers: React.FC = () => {
 
   const fetchJobs = async () => {
     try {
-      const response = await axios.get('/api/jobs/');
-      setJobs(response.data);
+      const data = await apiService.getJobPostings();
+      setJobs(data);
     } catch (err) {
-      // Fallback data for development
+      // Fallback data for development if apiService also fails
       setJobs([
         {
           id: 1,
@@ -139,167 +241,391 @@ const Careers: React.FC = () => {
 
   return (
     <div className="careers-page">
-      {/* Hero Section */}
-      <section className="careers-hero" data-aos="fade-up">
-        <div className="container">
-          <h1 className="page-title">Join Our Team</h1>
-          <p className="page-subtitle">
-            Build the future with us. We're looking for passionate individuals who want to make a difference.
-          </p>
+      {/* Enhanced Hero Section with 3D Sphere */}
+      <motion.section 
+        ref={heroRef}
+        className="careers-hero"
+        initial="hidden"
+        animate="visible"
+        variants={heroVariants}
+      >
+        <div className="hero-background">
+          <Canvas className="hero-canvas">
+            <Suspense fallback={null}>
+              <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 10, 10]} />
+              <TechSphere />
+              <Environment preset="city" />
+              <OrbitControls enableZoom={false} enablePan={false} />
+            </Suspense>
+          </Canvas>
         </div>
-      </section>
+        
+        <motion.div className="hero-content" style={{ y, opacity }}>
+          <div className="container">
+            <motion.div className="hero-text" variants={staggerContainer}>
+              <motion.div className="hero-badge" variants={fadeInUp}>
+                <span>🚀 We're Hiring</span>
+              </motion.div>
+              
+              <motion.h1 className="hero-title" variants={fadeInUp}>
+                Join Our <span className="gradient-text">Innovation</span> Journey
+              </motion.h1>
+              
+              <motion.p className="hero-description" variants={fadeInUp}>
+                Build your career with us and help shape the future of technology. 
+                Join a team of passionate innovators creating solutions that matter.
+              </motion.p>
+              
+              <motion.div className="hero-stats" variants={staggerContainer}>
+                <motion.div className="stat-item" variants={scaleIn}>
+                  <span className="stat-number">50+</span>
+                  <span className="stat-label">Team Members</span>
+                </motion.div>
+                <motion.div className="stat-item" variants={scaleIn}>
+                  <span className="stat-number">15+</span>
+                  <span className="stat-label">Open Positions</span>
+                </motion.div>
+                <motion.div className="stat-item" variants={scaleIn}>
+                  <span className="stat-number">95%</span>
+                  <span className="stat-label">Employee Satisfaction</span>
+                </motion.div>
+              </motion.div>
+              
+              <motion.div className="hero-actions" variants={fadeInUp}>
+                <motion.button 
+                  className="btn btn-primary btn-large"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => document.querySelector('.jobs-section')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  View Open Positions
+                </motion.button>
+                <motion.button 
+                  className="btn btn-outline btn-large"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Learn About Culture
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </motion.section>
 
-      {/* Benefits Section */}
-      <section className="benefits-section" data-aos="fade-up">
+      {/* Enhanced Benefits Section */}
+      <motion.section 
+        className="benefits-section"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={staggerContainer}
+      >
         <div className="container">
-          <h2 className="section-title">Why Work at AZAYD?</h2>
-          <div className="benefits-grid">
-            <div className="benefit-card" data-aos="fade-up" data-aos-delay="100">
+          <motion.div className="section-header" variants={fadeInUp}>
+            <motion.div className="section-badge" variants={scaleIn}>
+              <span>✨ Benefits & Perks</span>
+            </motion.div>
+            <motion.h2 className="section-title" variants={fadeInUp}>
+              Why Choose <span className="gradient-text">AZAYD</span>?
+            </motion.h2>
+            <motion.p className="section-subtitle" variants={fadeInUp}>
+              We believe in creating an environment where our team can thrive both professionally and personally.
+            </motion.p>
+          </motion.div>
+          
+          <motion.div className="benefits-grid" variants={staggerContainer}>
+            <motion.div 
+              className="benefit-card"
+              variants={scaleIn}
+              whileHover={{ 
+                scale: 1.05, 
+                rotateY: 5,
+                transition: { type: 'spring', stiffness: 300 }
+              }}
+            >
               <div className="benefit-icon">💰</div>
               <h3>Competitive Salary</h3>
-              <p>We offer competitive compensation packages with equity options.</p>
-            </div>
-            <div className="benefit-card" data-aos="fade-up" data-aos-delay="200">
+              <p>We offer competitive compensation packages with equity options and performance bonuses.</p>
+            </motion.div>
+            
+            <motion.div 
+              className="benefit-card"
+              variants={scaleIn}
+              whileHover={{ 
+                scale: 1.05, 
+                rotateY: 5,
+                transition: { type: 'spring', stiffness: 300 }
+              }}
+            >
               <div className="benefit-icon">🏠</div>
               <h3>Remote Friendly</h3>
-              <p>Work from anywhere with flexible hours and remote-first culture.</p>
-            </div>
-            <div className="benefit-card" data-aos="fade-up" data-aos-delay="300">
+              <p>Work from anywhere with flexible hours and remote-first culture that promotes work-life balance.</p>
+            </motion.div>
+            
+            <motion.div 
+              className="benefit-card"
+              variants={scaleIn}
+              whileHover={{ 
+                scale: 1.05, 
+                rotateY: 5,
+                transition: { type: 'spring', stiffness: 300 }
+              }}
+            >
               <div className="benefit-icon">📚</div>
               <h3>Learning & Growth</h3>
-              <p>Continuous learning opportunities and professional development budget.</p>
-            </div>
-            <div className="benefit-card" data-aos="fade-up" data-aos-delay="400">
+              <p>Continuous learning opportunities with $2000 annual professional development budget.</p>
+            </motion.div>
+            
+            <motion.div 
+              className="benefit-card"
+              variants={scaleIn}
+              whileHover={{ 
+                scale: 1.05, 
+                rotateY: 5,
+                transition: { type: 'spring', stiffness: 300 }
+              }}
+            >
               <div className="benefit-icon">🏥</div>
               <h3>Health Benefits</h3>
-              <p>Comprehensive health, dental, and vision insurance coverage.</p>
-            </div>
-            <div className="benefit-card" data-aos="fade-up" data-aos-delay="500">
+              <p>Comprehensive health, dental, and vision insurance with 100% premium coverage.</p>
+            </motion.div>
+            
+            <motion.div 
+              className="benefit-card"
+              variants={scaleIn}
+              whileHover={{ 
+                scale: 1.05, 
+                rotateY: 5,
+                transition: { type: 'spring', stiffness: 300 }
+              }}
+            >
               <div className="benefit-icon">🌴</div>
               <h3>Unlimited PTO</h3>
-              <p>Take the time you need to recharge with our unlimited vacation policy.</p>
-            </div>
-            <div className="benefit-card" data-aos="fade-up" data-aos-delay="600">
+              <p>Take the time you need to recharge with our unlimited vacation policy and mental health days.</p>
+            </motion.div>
+            
+            <motion.div 
+              className="benefit-card"
+              variants={scaleIn}
+              whileHover={{ 
+                scale: 1.05, 
+                rotateY: 5,
+                transition: { type: 'spring', stiffness: 300 }
+              }}
+            >
               <div className="benefit-icon">🎯</div>
-              <h3>Impact</h3>
-              <p>Work on meaningful projects that make a real difference for our clients.</p>
-            </div>
-          </div>
+              <h3>Meaningful Impact</h3>
+              <p>Work on meaningful projects that make a real difference for our clients and society.</p>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Jobs Section */}
-      <section className="jobs-section" data-aos="fade-up">
+      {/* Enhanced Jobs Section */}
+      <motion.section 
+        className="jobs-section"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={staggerContainer}
+      >
         <div className="container">
-          <div className="jobs-header">
-            <h2 className="section-title">Open Positions</h2>
+          <motion.div className="section-header" variants={fadeInUp}>
+            <motion.div className="section-badge" variants={scaleIn}>
+              <span>💼 Open Positions</span>
+            </motion.div>
+            <motion.h2 className="section-title" variants={fadeInUp}>
+              Find Your <span className="gradient-text">Dream Role</span>
+            </motion.h2>
+            <motion.p className="section-subtitle" variants={fadeInUp}>
+              Explore exciting opportunities to grow your career with our innovative team.
+            </motion.p>
+          </motion.div>
+
+          <motion.div className="jobs-header" variants={fadeInUp}>
             <div className="jobs-filter">
               <label htmlFor="department-filter">Filter by Department:</label>
-              <select 
+              <motion.select 
                 id="department-filter"
                 value={filterDepartment}
                 onChange={(e) => setFilterDepartment(e.target.value)}
                 className="filter-select"
+                whileFocus={{ scale: 1.02 }}
               >
                 {departments.map(dept => (
                   <option key={dept} value={dept}>
                     {dept === 'all' ? 'All Departments' : dept}
                   </option>
                 ))}
-              </select>
+              </motion.select>
             </div>
-          </div>
+          </motion.div>
 
           {loading ? (
-            <div className="loading-spinner">
+            <motion.div className="loading-spinner" variants={fadeInUp}>
               <div className="spinner"></div>
-              <p>Loading job openings...</p>
-            </div>
+              <p>Loading amazing opportunities...</p>
+            </motion.div>
           ) : (
-            <div className="jobs-list">
+            <motion.div className="jobs-list" variants={staggerContainer}>
               {filteredJobs.length === 0 ? (
-                <div className="no-jobs">
+                <motion.div className="no-jobs" variants={fadeInUp}>
                   <p>No job openings found for the selected department.</p>
-                </div>
+                </motion.div>
               ) : (
-                filteredJobs.map((job, index) => (
-                  <div 
-                    key={job.id} 
-                    className="job-card"
-                    data-aos="fade-up"
-                    data-aos-delay={index * 100}
-                  >
-                    <div className="job-header">
-                      <div className="job-title-section">
-                        <h3 className="job-title">{job.title}</h3>
-                        <div className="job-meta">
-                          <span className="job-department">{job.department}</span>
-                          <span className="job-location">{job.location}</span>
-                          <span className="job-type">{job.type}</span>
-                        </div>
-                      </div>
-                      <div className="job-actions">
-                        <button 
-                          className="btn btn-secondary"
-                          onClick={() => setSelectedJob(selectedJob?.id === job.id ? null : job)}
-                        >
-                          {selectedJob?.id === job.id ? 'Hide Details' : 'View Details'}
-                        </button>
-                        <button 
-                          className="btn btn-primary"
-                          onClick={() => handleApply(job)}
-                        >
-                          Apply Now
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {selectedJob?.id === job.id && (
-                      <div className="job-details">
-                        <div className="job-description">
-                          <h4>Description</h4>
-                          <p>{job.description}</p>
-                        </div>
-                        
-                        <div className="job-requirements">
-                          <h4>Requirements</h4>
-                          <ul>
-                            {job.requirements.map((req, reqIndex) => (
-                              <li key={reqIndex}>{req}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        {job.salary_range && (
-                          <div className="job-salary">
-                            <h4>Salary Range</h4>
-                            <p>{job.salary_range}</p>
+                <AnimatePresence>
+                  {filteredJobs.map((job, index) => (
+                    <motion.div 
+                      key={job.id} 
+                      className="job-card"
+                      variants={jobCardAnimation}
+                      whileHover="hover"
+                      layout
+                    >
+                      <div className="job-header">
+                        <div className="job-title-section">
+                          <h3 className="job-title">{job.title}</h3>
+                          <div className="job-meta">
+                            <span className="job-department">{job.department}</span>
+                            <span className="job-location">{job.location}</span>
+                            <span className="job-type">{job.type}</span>
                           </div>
-                        )}
-                        
-                        <div className="job-posted">
-                          <p><strong>Posted:</strong> {new Date(job.posted_date).toLocaleDateString()}</p>
+                        </div>
+                        <div className="job-actions">
+                          <motion.button 
+                            className="btn btn-secondary"
+                            onClick={() => setSelectedJob(selectedJob?.id === job.id ? null : job)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {selectedJob?.id === job.id ? 'Hide Details' : 'View Details'}
+                          </motion.button>
+                          <motion.button 
+                            className="btn btn-primary"
+                            onClick={() => handleApply(job)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            Apply Now
+                          </motion.button>
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))
+                      
+                      <AnimatePresence>
+                        {selectedJob?.id === job.id && (
+                          <motion.div 
+                            className="job-details"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <div className="job-description">
+                              <h4>Description</h4>
+                              <p>{job.description}</p>
+                            </div>
+                            
+                            <div className="job-requirements">
+                              <h4>Requirements</h4>
+                              <ul>
+                                {job.requirements.map((req, reqIndex) => (
+                                  <motion.li 
+                                    key={reqIndex}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: reqIndex * 0.1 }}
+                                  >
+                                    {req}
+                                  </motion.li>
+                                ))}
+                              </ul>
+                            </div>
+                            
+                            {job.salary_range && (
+                              <div className="job-salary">
+                                <h4>Salary Range</h4>
+                                <p>{job.salary_range}</p>
+                              </div>
+                            )}
+                            
+                            <div className="job-posted">
+                              <p><strong>Posted:</strong> {new Date(job.posted_date).toLocaleDateString()}</p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               )}
-            </div>
+            </motion.div>
           )}
         </div>
-      </section>
+      </motion.section>
 
-      {/* CTA Section */}
-      <section className="careers-cta" data-aos="fade-up">
+      {/* Enhanced CTA Section */}
+      <motion.section 
+        className="careers-cta"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={staggerContainer}
+      >
         <div className="container">
-          <div className="cta-content">
-            <h2>Don't See a Perfect Match?</h2>
-            <p>We're always interested in hearing from talented individuals. Send us your resume and let's talk!</p>
-            <button className="btn btn-primary btn-large">Send Resume</button>
-          </div>
+          <motion.div className="cta-content" variants={fadeInUp}>
+            <motion.div className="cta-badge" variants={scaleIn}>
+              <span>🌟 Join Our Mission</span>
+            </motion.div>
+            
+            <motion.h2 className="cta-title" variants={fadeInUp}>
+              Don't See a <span className="gradient-text">Perfect Match</span>?
+            </motion.h2>
+            
+            <motion.p className="cta-description" variants={fadeInUp}>
+              We're always interested in hearing from talented individuals who share our passion for innovation. 
+              Send us your resume and let's explore how you can contribute to our mission!
+            </motion.p>
+            
+            <motion.div className="cta-actions" variants={staggerContainer}>
+              <motion.button 
+                className="btn btn-primary btn-large"
+                variants={scaleIn}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Send Resume
+              </motion.button>
+              
+              <motion.button 
+                className="btn btn-outline btn-large"
+                variants={scaleIn}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Schedule a Call
+              </motion.button>
+            </motion.div>
+            
+            <motion.div className="cta-stats" variants={staggerContainer}>
+              <motion.div className="cta-stat" variants={scaleIn}>
+                <span className="stat-number">24h</span>
+                <span className="stat-label">Average Response Time</span>
+              </motion.div>
+              <motion.div className="cta-stat" variants={scaleIn}>
+                <span className="stat-number">85%</span>
+                <span className="stat-label">Interview Success Rate</span>
+              </motion.div>
+              <motion.div className="cta-stat" variants={scaleIn}>
+                <span className="stat-number">100+</span>
+                <span className="stat-label">Applications This Month</span>
+              </motion.div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 };

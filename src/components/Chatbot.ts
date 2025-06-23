@@ -44,8 +44,27 @@ export class Chatbot {
       this.updateConversationHistory('user', message);
       const messages = OpenRouterAPI.prepareConversationContext(this.conversationHistory);
       
-      // Get streaming response
-      return await OpenRouterAPI.generateResponse(messages);
+      // Get streaming response with enhanced error handling
+      try {
+        const response = await OpenRouterAPI.generateResponse(messages);
+        if (response && response.trim()) {
+          // For OpenRouter API, simulate streaming display
+          await this.simulateStreamingResponse(response);
+          return response;
+        } else {
+          throw new Error('Empty response from AI service');
+        }
+      } catch (apiError) {
+        console.error('OpenRouter API Error:', apiError);
+        
+        if (retryCount < this.maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay * (retryCount + 1)));
+          return this.handleAIResponse(message, retryCount + 1);
+        }
+        
+        // Provide a more helpful fallback response
+        return this.generateFallbackResponse(message);
+      }
 
     } catch (error: any) {
       console.error('AI response error:', error);
@@ -61,6 +80,24 @@ export class Chatbot {
       this.isWaitingForResponse = false;
       this.streamingResponse = false;
     }
+  }
+
+  private generateFallbackResponse(userMessage: string): string {
+    const message = userMessage.toLowerCase();
+    
+    if (message.includes('help') || message.includes('support')) {
+      return "I'm here to help! While I'm having trouble with my AI service, I can still assist you with information about Azayd IT Consulting. Try asking about our services, contact information, or pricing. For complex queries, please contact us directly at contact@azayd.com.";
+    }
+    
+    if (message.includes('service') || message.includes('what') || message.includes('do')) {
+      return "Azayd IT Consulting offers comprehensive IT services including Web Development, Mobile Apps, Cloud Solutions, AI & Machine Learning, DevOps, and Cybersecurity. Would you like to know more about any specific service?";
+    }
+    
+    if (message.includes('contact') || message.includes('reach')) {
+      return "You can reach us at:\n\n📧 Email: contact@azayd.com\n📞 Phone: +91 XXXXXXXXXX\n📍 Office: MG Road, Bengaluru\n\nWe're here to help with all your IT consulting needs!";
+    }
+    
+    return "Thank you for your question! While I'm having trouble with my AI service right now, I'd be happy to connect you with our team who can provide detailed answers. Please contact us at contact@azayd.com or call +91 XXXXXXXXXX for immediate assistance.";
   }
 
   private async simulateStreamingResponse(response: string): Promise<string> {
@@ -96,9 +133,8 @@ export class Chatbot {
       return localResponse;
     }
     
-    return "I apologize, but I'm currently experiencing connectivity issues. " +
-           "Please email us at contact@azayd.com or call us at +91 XXXXXXXXXX " +
-           "for immediate assistance. Alternatively, you can try rephrasing your question.";
+    // Use the same intelligent fallback logic
+    return this.generateFallbackResponse(message);
   }
 
   private updateConversationHistory(role: string, content: string): void {
@@ -156,8 +192,10 @@ export class Chatbot {
         this.hideTypingIndicator();
         
         try {
-          await this.handleAIResponse(message);
-          this.updateConversationHistory('assistant', this.currentMessageElement?.querySelector('.chatbot__message-content')?.textContent || '');
+          const aiResponse = await this.handleAIResponse(message);
+          if (aiResponse) {
+            this.updateConversationHistory('assistant', aiResponse);
+          }
         } catch (error) {
           console.error('Error handling AI response:', error);
           this.appendToCurrentMessage('\n\nI apologize, but I encountered an error. Please try again.');
@@ -271,7 +309,7 @@ export class Chatbot {
               loop
               autoplay
             ></lottie-player>
-            <h3>Azayd AI Assistant</h3>
+
           </div>
           <button class="chatbot__close" aria-label="Close chat">&times;</button>
         </div>
@@ -339,21 +377,30 @@ export class Chatbot {
   }
 
   private initialize3D(): void {
-    // Import Three.js dynamically
-    const THREE = (window as any).THREE;
-    if (!THREE) {
-      console.error('Three.js not found');
-      return;
+    try {
+      // Import Three.js properly
+      import('three').then((THREE) => {
+        const canvasElement = this.container.querySelector('.chatbot__canvas');
+        if (!canvasElement) return;
+        
+        // Initialize Three.js with the imported module
+        this.setupThreeJsScene(THREE, canvasElement);
+      }).catch(error => {
+        console.error('Failed to load Three.js:', error);
+      });
+    } catch (error) {
+      console.error('Error initializing 3D:', error);
     }
+  }
 
-    const canvas = this.container.querySelector('.chatbot__canvas');
-    if (!canvas) return;
+  private setupThreeJsScene(THREE: any, canvasElement: Element): void {
+    if (!canvasElement) return;
 
     // Create scene
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     this.renderer = new THREE.WebGLRenderer({ 
-      canvas: canvas,
+      canvas: canvasElement as HTMLCanvasElement,
       alpha: true,
       antialias: true
     });

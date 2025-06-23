@@ -1,6 +1,111 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll as useFramerScroll, useTransform } from 'framer-motion';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
+import { apiService, Service as ServiceType } from '../services/api';
+import { useInView } from 'react-intersection-observer';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { 
+      duration: 0.8, 
+      ease: [0.6, -0.05, 0.01, 0.99],
+      type: "spring",
+      stiffness: 100
+    }
+  }
+};
+
+const slideIn = {
+  hidden: { x: -60, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { 
+      duration: 0.8, 
+      ease: [0.6, -0.05, 0.01, 0.99],
+      type: "spring",
+      stiffness: 100
+    }
+  }
+};
+
+const scaleIn = {
+  hidden: { scale: 0.8, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { 
+      duration: 0.8, 
+      ease: [0.6, -0.05, 0.01, 0.99],
+      type: "spring",
+      stiffness: 100
+    }
+  }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2
+    }
+  }
+};
+
+const ServiceCard: React.FC<Service> = ({ title, description, icon, price, tech_stack, image }) => {
+  const [ref, inView] = useInView({
+    triggerOnce: false,
+    threshold: 0.2,
+    rootMargin: "-50px"
+  });
+
+  console.log('Rendering ServiceCard component:', title);
+  return (
+    <motion.div 
+      ref={ref}
+      className="service-card glass-card"
+      variants={scaleIn}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      whileHover={{ 
+        scale: 1.05,
+        boxShadow: '0 20px 40px 0 rgba(31, 38, 135, 0.4)',
+        y: -5
+      }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <div className="service-icon">
+        {image ? (
+          <img src={image} alt={title} className="service-icon-img" />
+        ) : (
+          <div className="service-icon-placeholder">{icon}</div>
+        )}
+      </div>
+      <h3 className="gradient-text">{title}</h3>
+      <p>{description}</p>
+      <div className="price gradient-text">{price}</div>
+      <div className="tech-stack">
+        {tech_stack.map((tech, index) => (
+          <motion.span 
+            key={index} 
+            className="tech-badge"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * index }}
+            whileHover={{ scale: 1.1, backgroundColor: 'rgba(99, 102, 241, 0.2)' }}
+          >
+            {tech}
+          </motion.span>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
 
 interface Service {
   id: number;
@@ -13,11 +118,25 @@ interface Service {
 }
 
 const Services: React.FC = () => {
+  console.log('Services component mounted');
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Scroll animation references - moved before conditional returns to follow Rules of Hooks
+  const { scrollYProgress } = useFramerScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
+  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.97]);
+  const y = useTransform(scrollYProgress, [0, 0.2], [0, -20]);
+  
+  // Hero section in-view animation - moved before conditional returns to follow Rules of Hooks
+  const [heroRef, heroInView] = useInView({
+    triggerOnce: false,
+    threshold: 0.1
+  });
+
   useEffect(() => {
+    console.log('Services useEffect running');
     AOS.init({
       duration: 1000,
       once: true
@@ -28,11 +147,28 @@ const Services: React.FC = () => {
 
   const fetchServices = async () => {
     try {
-      const response = await axios.get('/api/services/');
-      setServices(response.data);
+      const data = await apiService.getServices();
+      console.log('Fetched services data:', data);
+      // Map API service type to component service type
+      const mappedServices = data.map(service => {
+        console.log('Processing service:', service.title, 'Image path:', service.image);
+        return {
+          id: service.id,
+          title: service.title,
+          description: service.description,
+          icon: '🚀', // Default icon since it's missing in API type
+          price: service.price,
+          tech_stack: service.tech_stack,
+          image: service.image
+        };
+      });
+      setServices(mappedServices);
+      setLoading(false);
     } catch (err) {
+      console.error('Error fetching services:', err);
       setError('Failed to load services');
-      // Fallback data for development
+      setLoading(false);
+      // Fallback data for development if apiService also fails
       setServices([
         {
           id: 1,
@@ -89,6 +225,7 @@ const Services: React.FC = () => {
   };
 
   if (loading) {
+    console.log('Rendering loading state');
     return (
       <div className="services-page">
         <div className="container">
@@ -100,78 +237,47 @@ const Services: React.FC = () => {
       </div>
     );
   }
-
+  
+  console.log('Services state:', { services, loading, error });
+  
   return (
     <div className="services-page">
-      {/* Hero Section */}
-      <section className="services-hero" data-aos="fade-up">
+      <motion.div 
+        className="hero-section"
+        ref={heroRef}
+        style={{ opacity, scale, y }}
+        initial="hidden"
+        animate={heroInView ? "visible" : "hidden"}
+        variants={fadeInUp}
+      >
         <div className="container">
-          <h1 className="page-title">Our Services</h1>
-          <p className="page-subtitle">
+          <motion.h1 
+            className="hero-title gradient-text"
+            variants={slideIn}
+          >
+            Our Services
+          </motion.h1>
+          <motion.p 
+            className="hero-subtitle"
+            variants={fadeInUp}
+          >
             Comprehensive digital solutions tailored to your business needs
-          </p>
+          </motion.p>
         </div>
-      </section>
+      </motion.div>
 
-      {/* Services Grid */}
-      <section className="services-section">
+      <section className="services-grid-section">
         <div className="container">
-          {error && (
-            <div className="error-message" data-aos="fade-up">
-              <p>{error}</p>
-              <p>Showing sample data for demonstration.</p>
-            </div>
-          )}
-          
-          <div className="services-grid">
+          <motion.div 
+            className="services-grid"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {services.map((service, index) => (
-              <div 
-                key={service.id} 
-                className="service-card enhanced"
-                data-aos="fade-up"
-                data-aos-delay={index * 100}
-              >
-                <div className="service-header">
-                  <div className="service-icon">{service.icon}</div>
-                  <h3 className="service-title">{service.title}</h3>
-                </div>
-                
-                <div className="service-content">
-                  <p className="service-description">{service.description}</p>
-                  
-                  <div className="service-price">
-                    <span className="price-label">Price:</span>
-                    <span className="price-value">{service.price}</span>
-                  </div>
-                  
-                  <div className="tech-stack">
-                    <h4>Technologies:</h4>
-                    <div className="tech-tags">
-                      {service.tech_stack.map((tech, techIndex) => (
-                        <span key={techIndex} className="tech-tag">{tech}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="service-actions">
-                  <button className="btn btn-primary">Learn More</button>
-                  <button className="btn btn-secondary">Get Quote</button>
-                </div>
-              </div>
+              <ServiceCard key={service.id} {...service} />
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="services-cta" data-aos="fade-up">
-        <div className="container">
-          <div className="cta-content">
-            <h2>Need a Custom Solution?</h2>
-            <p>We can create tailored solutions that perfectly fit your unique requirements.</p>
-            <button className="btn btn-primary btn-large">Contact Us</button>
-          </div>
+          </motion.div>
         </div>
       </section>
     </div>

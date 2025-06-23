@@ -5,7 +5,7 @@ export const mockServices = [
     id: 1,
     title: 'Web Development',
     description: 'Modern, responsive websites built with cutting-edge technologies.',
-    image: '/images/services/web-dev.jpg',
+    image: '/images/services/web-dev.svg',
     price: 'From $5,000',
     tech_stack: ['React', 'Vue', 'Angular', 'Node.js', 'Django'],
     features: [
@@ -20,7 +20,7 @@ export const mockServices = [
     id: 2,
     title: 'Mobile Apps',
     description: 'Native and cross-platform mobile applications for iOS and Android.',
-    image: '/images/services/mobile-apps.jpg',
+    image: '/images/services/mobile-apps.svg',
     price: 'From $8,000',
     tech_stack: ['React Native', 'Flutter', 'Swift', 'Kotlin'],
     features: [
@@ -35,7 +35,7 @@ export const mockServices = [
     id: 3,
     title: 'AI Solutions',
     description: 'Intelligent automation and machine learning implementations.',
-    image: '/images/services/ai-solutions.jpg',
+    image: '/images/services/ai-solutions.svg',
     price: 'From $10,000',
     tech_stack: ['TensorFlow', 'PyTorch', 'OpenAI', 'Python', 'R'],
     features: [

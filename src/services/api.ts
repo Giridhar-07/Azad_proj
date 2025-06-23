@@ -87,46 +87,110 @@ export interface ContactMessage {
 export const apiService = {
   // Services
   getServices: async (): Promise<Service[]> => {
-    const response = await axios.get('/api/services/');
-    return response.data;
+    if (USE_MOCK_DATA) {
+      return mockApiService.getServices();
+    }
+    try {
+      const response = await axios.get('/api/services/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      return mockApiService.getServices();
+    }
   },
 
   getService: async (id: number): Promise<Service> => {
-    const response = await axios.get(`/api/services/${id}/`);
-    return response.data;
+    if (USE_MOCK_DATA) {
+      return mockApiService.getService(id);
+    }
+    try {
+      const response = await axios.get(`/api/services/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching service ${id}:`, error);
+      return mockApiService.getService(id);
+    }
   },
 
   // Team members
   getTeamMembers: async (): Promise<TeamMember[]> => {
-    const response = await axios.get('/api/team/');
-    return response.data;
+    if (USE_MOCK_DATA) {
+      return mockApiService.getTeamMembers();
+    }
+    try {
+      const response = await axios.get('/api/team/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      return mockApiService.getTeamMembers();
+    }
   },
 
   getTeamMember: async (id: number): Promise<TeamMember> => {
-    const response = await axios.get(`/api/team/${id}/`);
-    return response.data;
+    if (USE_MOCK_DATA) {
+      return mockApiService.getTeamMember(id);
+    }
+    try {
+      const response = await axios.get(`/api/team/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching team member ${id}:`, error);
+      return mockApiService.getTeamMember(id);
+    }
   },
 
   // Job postings
   getJobPostings: async (): Promise<JobPosting[]> => {
-    const response = await axios.get('/api/jobs/');
-    return response.data;
+    if (USE_MOCK_DATA) {
+      return mockApiService.getJobPostings();
+    }
+    try {
+      const response = await axios.get('/api/jobs/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching job postings:', error);
+      return mockApiService.getJobPostings();
+    }
   },
 
   getJobPosting: async (id: number): Promise<JobPosting> => {
-    const response = await axios.get(`/api/jobs/${id}/`);
-    return response.data;
+    if (USE_MOCK_DATA) {
+      return mockApiService.getJobPosting(id);
+    }
+    try {
+      const response = await axios.get(`/api/jobs/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching job posting ${id}:`, error);
+      return mockApiService.getJobPosting(id);
+    }
   },
 
   // Contact
   submitContactForm: async (data: ContactMessage): Promise<void> => {
-    await axios.post('/api/contact/', data);
+    if (USE_MOCK_DATA) {
+      return mockApiService.submitContactForm(data);
+    }
+    try {
+      await axios.post('/api/contact/', data);
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      return mockApiService.submitContactForm(data);
+    }
   },
 
   // Health check
   healthCheck: async (): Promise<{ status: string }> => {
-    const response = await axios.get('/api/health/');
-    return response.data;
+    if (USE_MOCK_DATA) {
+      return mockApiService.healthCheck();
+    }
+    try {
+      const response = await axios.get('/api/health/');
+      return response.data;
+    } catch (error) {
+      console.error('Error checking health:', error);
+      return mockApiService.healthCheck();
+    }
   }
 };
 

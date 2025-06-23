@@ -21,11 +21,22 @@ interface OpenRouterResponse {
 }
 
 export class OpenRouterAPI {
-  private static API_KEY = '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';
+  private static API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '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';
   private static API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-  private static MODEL = 'deepseek/deepseek-r1-0528:free';
+  private static MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324:free';
   private static SITE_URL = window.location.origin;
   private static SITE_NAME = 'Azayd IT Consulting';
+  
+  // Debug logging
+  static {
+    console.log('OpenRouter API Configuration:');
+    console.log('API Key (first 10 chars):', this.API_KEY.substring(0, 10) + '...');
+    console.log('Model:', this.MODEL);
+    console.log('Environment variables loaded:', {
+      VITE_OPENROUTER_API_KEY: import.meta.env.VITE_OPENROUTER_API_KEY ? 'Present' : 'Missing',
+      VITE_OPENROUTER_MODEL: import.meta.env.VITE_OPENROUTER_MODEL || 'Not set'
+    });
+  }
   
   // Rate limiting
   private static lastRequestTime: number = 0;
@@ -82,8 +93,28 @@ export class OpenRouterAPI {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
+        console.error('OpenRouter API Response Error:');
+        console.error('Status:', response.status, response.statusText);
+        console.error('Headers:', Object.fromEntries(response.headers.entries()));
+        
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error('Error Response Body:', errorData);
+        } catch (e) {
+          console.error('Could not parse error response as JSON');
+          const textError = await response.text();
+          console.error('Error Response Text:', textError);
+          throw new Error(`API Error ${response.status}: ${textError}`);
+        }
+        
+        const errorMessage = errorData.error?.message || errorData.message || 'Unknown error';
+        
+        if (response.status === 401) {
+          throw new Error(`Authentication Error (401): ${errorMessage}. Please check:\n1. API key is valid and not expired\n2. Model training is enabled in OpenRouter settings\n3. Account has sufficient credits\n4. Try using a different model like deepseek/deepseek-v3`);
+        }
+        
+        throw new Error(`API Error ${response.status}: ${errorMessage}`);
       }
 
       // Handle streaming response
@@ -140,7 +171,7 @@ export class OpenRouterAPI {
   }
 
   /**
-   * Prepare conversation context with system prompt
+   * Prepare conversation context with enhanced system prompt
    */
   public static prepareConversationContext(messages: Message[]): Message[] {
     // Add system message at the beginning if not present
@@ -148,7 +179,38 @@ export class OpenRouterAPI {
       return [
         {
           role: 'system',
-          content: 'You are an AI assistant for Azayd IT Consulting. Provide helpful, accurate, and professional responses about our IT services including Web Development, Mobile Development, Cloud Solutions, AI & Machine Learning, DevOps & Automation, and Cybersecurity. Keep responses concise and relevant to IT consulting.'
+          content: `You are an AI assistant for Azayd IT Consulting, a leading IT consulting company. Here's comprehensive information about our company:
+
+**Company Overview:**
+- Name: Azayd IT Consulting
+- Location: MG Road, Bengaluru, India
+- Contact: contact@azayd.com, +91 XXXXXXXXXX
+- Website: ${this.SITE_URL}
+
+**Our Services:**
+1. **Web Development**: Modern, responsive websites and web applications using latest technologies
+2. **Mobile App Development**: Native and cross-platform mobile apps for iOS and Android
+3. **Cloud Solutions**: Migration, optimization, and management across AWS, Azure, and Google Cloud
+4. **AI & Machine Learning**: Custom AI solutions, data analytics, and machine learning implementations
+5. **DevOps & Automation**: CI/CD pipelines, infrastructure automation, and deployment optimization
+6. **Cybersecurity**: Security audits, encryption, secure authentication, and protection strategies
+7. **Digital Transformation**: Complete business digitization and process optimization
+8. **Custom Software Development**: Tailored software solutions for specific business needs
+
+**Key Features:**
+- Competitive pricing with customized solutions
+- Global service delivery with remote capabilities
+- Industry-best security practices
+- Scalable and high-performance solutions
+- Expert team with latest technology expertise
+
+**Instructions:**
+- Provide helpful, accurate, and professional responses
+- For website-specific questions, use the above company information
+- For general questions, provide comprehensive and helpful answers
+- Keep responses conversational but professional
+- Suggest scheduling consultations when appropriate
+- Always maintain a helpful and solution-oriented tone`
         },
         ...messages
       ];
