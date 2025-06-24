@@ -74,10 +74,12 @@ export interface TeamMember {
   twitter_url?: string;
   github_url?: string;
   email?: string;
-  is_leadership: boolean;
+  is_leadership?: boolean; // Made optional
   order: number;
-  skills: string[];
-  years_experience: number;
+  skills?: string[]; // Made optional to resolve type incompatibility
+  years_experience?: number; // Made optional
+  department?: string; // Added department
+  achievements?: string[]; // Added achievements
 }
 
 export interface JobPosting {

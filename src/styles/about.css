@@ -744,11 +744,11 @@
     align-items: center;
   }
 }
-
 @media (max-width: 480px) {
   .hero-text h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
+  
   
   .hero-stats {
     grid-template-columns: 1fr;

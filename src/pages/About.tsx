@@ -161,6 +161,7 @@ const About: React.FC = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const teamRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null); // New ref for timeline section
   
   // Scroll progress tracking
   const { scrollYProgress } = useScroll();
@@ -185,15 +186,24 @@ const About: React.FC = () => {
   });
   
   // Company statistics with real-time updates
-  const companyStats: CompanyStats = useMemo(() => ({
-    projectsCompleted: 150,
-    yearsExperience: 8,
-    teamMembers: state.teamMembers.length || 25,
-    clientSatisfaction: 4.9,
-    countriesServed: 15,
-    technologiesUsed: 30
-  }), [state.teamMembers.length]);
-  
+  const companyStatsArray = useMemo(() => [
+    { value: 150, label: "Projects Completed", suffix: "+" },
+    { value: 8, label: "Years Experience", suffix: "+" },
+    { value: state.teamMembers.length || 25, label: "Team Members", suffix: "" },
+    { value: 4.9, label: "Client Satisfaction", suffix: "/5" },
+    { value: 15, label: "Countries Served", suffix: "+" },
+    { value: 30, label: "Technologies Used", suffix: "+" },
+  ], [state.teamMembers.length]);
+
+  // Company timeline events
+  const companyTimelineEvents = useMemo(() => [
+    { year: "2015", description: "Founded as a small startup." },
+    { year: "2017", description: "Launched our first major product." },
+    { year: "2019", description: "Expanded to international markets." },
+    { year: "2021", description: "Achieved 100+ successful projects." },
+    { year: "2023", description: "Recognized as a top industry innovator." },
+  ], []);
+
   // Enhanced filtering with search functionality
   const filteredTeamMembers = useMemo(() => {
     let filtered = state.teamMembers;
@@ -240,7 +250,7 @@ const About: React.FC = () => {
       
       // Fetch team members with enhanced error handling
       const members = await apiService.getTeamMembers();
-      
+      console.log('Fetched team members:', members);
       // Validate and enhance data
       const enhancedMembers = members.map(member => ({
         ...member,
@@ -343,10 +353,11 @@ const About: React.FC = () => {
   }, [location.hash, fetchTeamMembers, navigateToSection]);
   
   // Intersection observers for section tracking
-  const heroInView = useInView(heroRef, { threshold: 0.3 });
-  const teamInView = useInView(teamRef, { threshold: 0.2 });
-  const statsInView = useInView(statsRef, { threshold: 0.3 });
-  
+  const heroInView = useInView(heroRef);
+  const teamInView = useInView(teamRef);
+  const statsInView = useInView(statsRef);
+  const companyTimelineInView = useInView(timelineRef);
+
   return (
     <motion.div 
       className="about-page"
@@ -390,9 +401,7 @@ const About: React.FC = () => {
           {/* Interactive Statistics */}
           <Suspense fallback={<div className="loading-stats">Loading Statistics...</div>}>
             <InteractiveStats 
-              stats={companyStats}
-              inView={heroInView}
-              variants={animationVariants.staggerContainer}
+              stats={companyStatsArray} // Changed to companyStatsArray
             />
           </Suspense>
           
@@ -707,7 +716,7 @@ const About: React.FC = () => {
           </motion.div>
           
           <Suspense fallback={<div className="loading-timeline">Loading Timeline...</div>}>
-            <CompanyTimeline variants={animationVariants.staggerContainer} />
+            <CompanyTimeline events={companyTimelineEvents} />
           </Suspense>
         </div>
       </motion.section>
