@@ -5,6 +5,7 @@ export const mockServices = [
     id: 1,
     title: 'Web Development',
     description: 'Modern, responsive websites built with cutting-edge technologies.',
+    short_description: 'Modern, responsive websites',
     image: '/images/services/web-dev.svg',
     price: 'From $5,000',
     tech_stack: ['React', 'Vue', 'Angular', 'Node.js', 'Django'],
@@ -14,12 +15,19 @@ export const mockServices = [
       'Performance tuning',
       'Content management',
       'E-commerce integration'
-    ]
+    ],
+    slug: 'web-development',
+    is_featured: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    icon: '🌐',
+    duration: '4-8 weeks'
   },
   {
     id: 2,
     title: 'Mobile Apps',
     description: 'Native and cross-platform mobile applications for iOS and Android.',
+    short_description: 'Native and cross-platform mobile apps',
     image: '/images/services/mobile-apps.svg',
     price: 'From $8,000',
     tech_stack: ['React Native', 'Flutter', 'Swift', 'Kotlin'],
@@ -29,12 +37,19 @@ export const mockServices = [
       'Offline functionality',
       'Push notifications',
       'App store optimization'
-    ]
+    ],
+    slug: 'mobile-apps',
+    is_featured: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    icon: '📱',
+    duration: '6-12 weeks'
   },
   {
     id: 3,
     title: 'AI Solutions',
     description: 'Intelligent automation and machine learning implementations.',
+    short_description: 'Intelligent automation and ML',
     image: '/images/services/ai-solutions.svg',
     price: 'From $10,000',
     tech_stack: ['TensorFlow', 'PyTorch', 'OpenAI', 'Python', 'R'],
@@ -44,7 +59,13 @@ export const mockServices = [
       'Computer vision',
       'Predictive analytics',
       'AI integration with existing systems'
-    ]
+    ],
+    slug: 'ai-solutions',
+    is_featured: false,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    icon: '🤖',
+    duration: '8-16 weeks'
   }
 ];
 
@@ -57,7 +78,12 @@ export const mockTeamMembers = [
     image: '/images/team/alex.jpg',
     linkedin_url: 'https://linkedin.com/in/alexjohnson',
     twitter_url: 'https://twitter.com/alexjohnson',
-    github_url: 'https://github.com/alexjohnson'
+    github_url: 'https://github.com/alexjohnson',
+    email: 'alex@azayd.com',
+    is_leadership: true,
+    order: 1,
+    skills: ['Leadership', 'Strategy', 'Business Development', 'Software Architecture'],
+    years_experience: 15
   },
   {
     id: 2,
@@ -66,7 +92,12 @@ export const mockTeamMembers = [
     bio: 'Sarah is an expert in cloud architecture and emerging technologies.',
     image: '/images/team/sarah.jpg',
     linkedin_url: 'https://linkedin.com/in/sarahchen',
-    github_url: 'https://github.com/sarahchen'
+    github_url: 'https://github.com/sarahchen',
+    email: 'sarah@azayd.com',
+    is_leadership: true,
+    order: 2,
+    skills: ['Cloud Architecture', 'DevOps', 'Kubernetes', 'AWS', 'System Design'],
+    years_experience: 12
   },
   {
     id: 3,
@@ -75,7 +106,12 @@ export const mockTeamMembers = [
     bio: 'Michael specializes in full-stack development and DevOps practices.',
     image: '/images/team/michael.jpg',
     linkedin_url: 'https://linkedin.com/in/michaelrodriguez',
-    github_url: 'https://github.com/michaelrodriguez'
+    github_url: 'https://github.com/michaelrodriguez',
+    email: 'michael@azayd.com',
+    is_leadership: false,
+    order: 3,
+    skills: ['React', 'Node.js', 'Python', 'Docker', 'CI/CD'],
+    years_experience: 8
   },
   {
     id: 4,
@@ -84,7 +120,12 @@ export const mockTeamMembers = [
     bio: 'Emily creates intuitive and beautiful user experiences.',
     image: '/images/team/emily.jpg',
     linkedin_url: 'https://linkedin.com/in/emilytaylor',
-    twitter_url: 'https://twitter.com/emilytaylor'
+    twitter_url: 'https://twitter.com/emilytaylor',
+    email: 'emily@azayd.com',
+    is_leadership: false,
+    order: 4,
+    skills: ['UI/UX Design', 'Figma', 'Adobe Creative Suite', 'User Research', 'Prototyping'],
+    years_experience: 6
   }
 ];
 

@@ -70,45 +70,57 @@ class ServiceDetailSerializer(ServiceSerializer):
 
 class TeamMemberSerializer(serializers.ModelSerializer):
     """
-    Enhanced serializer for TeamMember model with social media links and validation.
+    Enhanced serializer for TeamMember model with comprehensive data and validation.
     """
     linkedin_url = serializers.SerializerMethodField()
     twitter_url = serializers.SerializerMethodField()
     github_url = serializers.SerializerMethodField()
     full_name = serializers.SerializerMethodField()
+    primary_skills = serializers.SerializerMethodField()
+    experience_level = serializers.SerializerMethodField()
     
     class Meta:
         model = TeamMember
         fields = [
-            'id', 'name', 'full_name', 'position', 'bio', 'image', 
-            'linkedin_url', 'twitter_url', 'github_url', 'order', 'is_active'
+            'id', 'name', 'full_name', 'position', 'department', 'bio', 'image',
+            'linkedin_url', 'twitter_url', 'github_url', 'email',
+            'skills', 'primary_skills', 'years_experience', 'experience_level',
+            'achievements', 'is_active', 'is_leadership', 'order',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['order']
+        read_only_fields = ['order', 'created_at', 'updated_at']
     
     def get_linkedin_url(self, obj):
-        """
-        Return LinkedIn URL or empty string.
-        """
+        """Return LinkedIn URL or empty string."""
         return obj.linkedin if obj.linkedin else ''
     
     def get_twitter_url(self, obj):
-        """
-        Return Twitter URL or empty string.
-        """
+        """Return Twitter URL or empty string."""
         return obj.twitter if obj.twitter else ''
     
     def get_github_url(self, obj):
-        """
-        GitHub URL is not in the model, return empty string.
-        This could be added to the model in the future.
-        """
-        return ''
+        """Return GitHub URL or empty string."""
+        return obj.github if obj.github else ''
     
     def get_full_name(self, obj):
-        """
-        Return full name (same as name for now, but could be enhanced).
-        """
-        return obj.name
+        """Return full name."""
+        return obj.full_name
+    
+    def get_primary_skills(self, obj):
+        """Return primary skills for display."""
+        return obj.primary_skills
+    
+    def get_experience_level(self, obj):
+        """Return experience level based on years."""
+        years = obj.years_experience
+        if years < 2:
+            return 'Junior'
+        elif years < 5:
+            return 'Mid-level'
+        elif years < 10:
+            return 'Senior'
+        else:
+            return 'Expert'
 
 
 class JobPostingSerializer(serializers.ModelSerializer):

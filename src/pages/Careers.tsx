@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { Environment, OrbitControls, PerspectiveCamera } from '@react-three/drei';
@@ -40,8 +40,52 @@ const staggerContainer = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
+      staggerChildren: 0.1,
       delayChildren: 0.2
+    }
+  }
+};
+
+const slideInDown = {
+  hidden: { opacity: 0, y: -30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
+  }
+};
+
+const cardHoverVariants = {
+  hover: {
+    y: -8,
+    scale: 1.03,
+    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20
+    }
+  }
+};
+
+const floatingVariants = {
+  animate: {
+    y: [-5, 5, -5],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: 'easeInOut'
+    }
+  }
+};
+
+const pulseVariants = {
+  animate: {
+    scale: [1, 1.05, 1],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: 'easeInOut'
     }
   }
 };
@@ -103,13 +147,28 @@ interface JobPosting {
   requirements: string[];
   posted_date: string;
   salary_range?: string;
+  experience_level?: string;
+  tags?: string[];
+}
+
+interface CompanyStats {
+  employees: number;
+  openPositions: number;
+  satisfaction: number;
+  responseTime: string;
 }
 
 const Careers: React.FC = () => {
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(null);
   const [filterDepartment, setFilterDepartment] = useState<string>('all');
+  const [filterLocation, setFilterLocation] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('date');
   const [activeSection, setActiveSection] = useState('');
 
   const heroRef = useRef<HTMLDivElement>(null);
@@ -121,6 +180,60 @@ const Careers: React.FC = () => {
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
+  // Computed values using useMemo
+  const companyStats: CompanyStats = useMemo(() => ({
+    employees: 50,
+    openPositions: jobs.length,
+    satisfaction: 95,
+    responseTime: '24h'
+  }), [jobs.length]);
+
+  const departments = useMemo(() => 
+    ['all', ...Array.from(new Set(jobs.map(job => job.department)))],
+    [jobs]
+  );
+
+  const locations = useMemo(() => 
+    ['all', ...Array.from(new Set(jobs.map(job => job.location)))],
+    [jobs]
+  );
+
+  const jobTypes = useMemo(() => 
+    ['all', ...Array.from(new Set(jobs.map(job => job.type)))],
+    [jobs]
+  );
+
+  const filteredAndSortedJobs = useMemo(() => {
+    let filtered = jobs.filter(job => {
+      const matchesDepartment = filterDepartment === 'all' || job.department === filterDepartment;
+      const matchesLocation = filterLocation === 'all' || job.location.includes(filterLocation);
+      const matchesType = filterType === 'all' || job.type === filterType;
+      const matchesSearch = searchQuery === '' || 
+        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.requirements.some(req => req.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      return matchesDepartment && matchesLocation && matchesType && matchesSearch;
+    });
+
+    // Sort jobs
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'department':
+          return a.department.localeCompare(b.department);
+        case 'location':
+          return a.location.localeCompare(b.location);
+        case 'date':
+        default:
+          return new Date(b.posted_date).getTime() - new Date(a.posted_date).getTime();
+      }
+    });
+
+    return filtered;
+  }, [jobs, filterDepartment, filterLocation, filterType, searchQuery, sortBy]);
+
   useEffect(() => {
     AOS.init({
       duration: 1000,
@@ -131,11 +244,15 @@ const Careers: React.FC = () => {
     fetchJobs();
   }, []);
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
+      setError(null);
+      setLoading(true);
       const data = await apiService.getJobPostings();
       setJobs(data);
     } catch (err) {
+      console.error('Failed to fetch jobs:', err);
+      setError('Failed to load job postings. Please try again.');
       // Fallback data for development if apiService also fails
       setJobs([
         {
@@ -221,23 +338,62 @@ const Careers: React.FC = () => {
             'Creative mindset with attention to detail'
           ],
           posted_date: '2024-01-03',
-          salary_range: '$60,000 - $80,000'
+          salary_range: '$60,000 - $80,000',
+          experience_level: 'Mid-level',
+          tags: ['Marketing', 'Content', 'Social Media']
+        },
+        {
+          id: 6,
+          title: 'Data Scientist',
+          department: 'Engineering',
+          location: 'Seattle / Remote',
+          type: 'Full-time',
+          description: 'Join our data team to extract insights from complex datasets and build machine learning models that drive business decisions.',
+          requirements: [
+            '3+ years of experience in data science or analytics',
+            'Proficiency in Python, R, and SQL',
+            'Experience with machine learning frameworks (TensorFlow, PyTorch)',
+            'Strong statistical analysis and data visualization skills',
+            'Experience with cloud platforms and big data tools'
+          ],
+          posted_date: '2024-01-01',
+          salary_range: '$130,000 - $170,000',
+          experience_level: 'Senior',
+          tags: ['Data Science', 'Machine Learning', 'Python']
         }
       ]);
     } finally {
       setLoading(false);
+      setIsRetrying(false);
     }
-  };
+  }, []);
 
-  const departments = ['all', ...Array.from(new Set(jobs.map(job => job.department)))];
-  const filteredJobs = filterDepartment === 'all' 
-    ? jobs 
-    : jobs.filter(job => job.department === filterDepartment);
+  // Callback functions
+  const handleRetry = useCallback(() => {
+    setIsRetrying(true);
+    fetchJobs();
+  }, [fetchJobs]);
 
-  const handleApply = (job: JobPosting) => {
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('');
+    setFilterDepartment('all');
+    setFilterLocation('all');
+    setFilterType('all');
+    setSortBy('date');
+  }, []);
+
+  const handleApply = useCallback((job: JobPosting) => {
     // In a real application, this would open an application form or redirect to an application page
     alert(`Application process for ${job.title} would be initiated here.`);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   return (
     <div className="careers-page">
@@ -279,16 +435,46 @@ const Careers: React.FC = () => {
               </motion.p>
               
               <motion.div className="hero-stats" variants={staggerContainer}>
-                <motion.div className="stat-item" variants={scaleIn}>
-                  <span className="stat-number">50+</span>
+                <motion.div 
+                  className="stat-item"
+                  variants={scaleIn}
+                  whileHover={cardHoverVariants.hover}
+                >
+                  <motion.span 
+                    className="stat-number"
+                    variants={pulseVariants}
+                    animate="animate"
+                  >
+                    {companyStats.employees}+
+                  </motion.span>
                   <span className="stat-label">Team Members</span>
                 </motion.div>
-                <motion.div className="stat-item" variants={scaleIn}>
-                  <span className="stat-number">15+</span>
+                <motion.div 
+                  className="stat-item"
+                  variants={scaleIn}
+                  whileHover={cardHoverVariants.hover}
+                >
+                  <motion.span 
+                    className="stat-number"
+                    variants={pulseVariants}
+                    animate="animate"
+                  >
+                    {companyStats.openPositions}+
+                  </motion.span>
                   <span className="stat-label">Open Positions</span>
                 </motion.div>
-                <motion.div className="stat-item" variants={scaleIn}>
-                  <span className="stat-number">95%</span>
+                <motion.div 
+                  className="stat-item"
+                  variants={scaleIn}
+                  whileHover={cardHoverVariants.hover}
+                >
+                  <motion.span 
+                    className="stat-number"
+                    variants={pulseVariants}
+                    animate="animate"
+                  >
+                    {companyStats.satisfaction}%
+                  </motion.span>
                   <span className="stat-label">Employee Satisfaction</span>
                 </motion.div>
               </motion.div>
@@ -445,39 +631,218 @@ const Careers: React.FC = () => {
             </motion.p>
           </motion.div>
 
-          <motion.div className="jobs-header" variants={fadeInUp}>
-            <div className="jobs-filter">
-              <label htmlFor="department-filter">Filter by Department:</label>
-              <motion.select 
-                id="department-filter"
-                value={filterDepartment}
-                onChange={(e) => setFilterDepartment(e.target.value)}
-                className="filter-select"
+          {/* Error Banner */}
+          <AnimatePresence>
+            {error && (
+              <motion.div 
+                className="error-banner"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                variants={slideInDown}
+              >
+                <div className="error-content">
+                  <span className="error-icon">⚠️</span>
+                  <span className="error-message">{error}</span>
+                  <motion.button 
+                    className="retry-btn"
+                    onClick={handleRetry}
+                    disabled={isRetrying}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isRetrying ? 'Retrying...' : 'Retry'}
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.div className="jobs-controls" variants={fadeInUp}>
+            {/* Search Bar */}
+            <div className="search-container">
+              <motion.div 
+                className="search-input-wrapper"
                 whileFocus={{ scale: 1.02 }}
               >
-                {departments.map(dept => (
-                  <option key={dept} value={dept}>
-                    {dept === 'all' ? 'All Departments' : dept}
-                  </option>
-                ))}
-              </motion.select>
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search jobs by title, description, or requirements..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="search-input"
+                />
+                {searchQuery && (
+                  <motion.button
+                    className="clear-search"
+                    onClick={() => setSearchQuery('')}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    ✕
+                  </motion.button>
+                )}
+              </motion.div>
             </div>
+
+            {/* Filters */}
+            <div className="filters-container">
+              <div className="filter-group">
+                <label htmlFor="department-filter">Department:</label>
+                <motion.select 
+                  id="department-filter"
+                  value={filterDepartment}
+                  onChange={(e) => setFilterDepartment(e.target.value)}
+                  className="filter-select"
+                  whileFocus={{ scale: 1.02 }}
+                >
+                  {departments.map(dept => (
+                    <option key={dept} value={dept}>
+                      {dept === 'all' ? 'All Departments' : dept}
+                    </option>
+                  ))}
+                </motion.select>
+              </div>
+
+              <div className="filter-group">
+                <label htmlFor="location-filter">Location:</label>
+                <motion.select 
+                  id="location-filter"
+                  value={filterLocation}
+                  onChange={(e) => setFilterLocation(e.target.value)}
+                  className="filter-select"
+                  whileFocus={{ scale: 1.02 }}
+                >
+                  {locations.map(loc => (
+                    <option key={loc} value={loc}>
+                      {loc === 'all' ? 'All Locations' : loc}
+                    </option>
+                  ))}
+                </motion.select>
+              </div>
+
+              <div className="filter-group">
+                <label htmlFor="type-filter">Type:</label>
+                <motion.select 
+                  id="type-filter"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="filter-select"
+                  whileFocus={{ scale: 1.02 }}
+                >
+                  {jobTypes.map(type => (
+                    <option key={type} value={type}>
+                      {type === 'all' ? 'All Types' : type}
+                    </option>
+                  ))}
+                </motion.select>
+              </div>
+
+              <div className="filter-group">
+                <label htmlFor="sort-select">Sort by:</label>
+                <motion.select 
+                  id="sort-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="filter-select"
+                  whileFocus={{ scale: 1.02 }}
+                >
+                  <option value="date">Latest</option>
+                  <option value="title">Title</option>
+                  <option value="department">Department</option>
+                  <option value="location">Location</option>
+                </motion.select>
+              </div>
+
+              <motion.button
+                className="clear-filters-btn"
+                onClick={handleClearFilters}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Clear Filters
+              </motion.button>
+            </div>
+
+            {/* Results Summary */}
+            <motion.div className="results-summary" variants={fadeInUp}>
+              <span className="results-count">
+                {filteredAndSortedJobs.length} position{filteredAndSortedJobs.length !== 1 ? 's' : ''} found
+                {(searchQuery || filterDepartment !== 'all' || filterLocation !== 'all' || filterType !== 'all') && 
+                  ` matching your criteria`
+                }
+              </span>
+            </motion.div>
           </motion.div>
 
           {loading ? (
-            <motion.div className="loading-spinner" variants={fadeInUp}>
-              <div className="spinner"></div>
-              <p>Loading amazing opportunities...</p>
+            <motion.div className="loading-container" variants={staggerContainer}>
+              <motion.div className="loading-header" variants={fadeInUp}>
+                <div className="loading-spinner">
+                  <div className="spinner"></div>
+                </div>
+                <p>Loading amazing opportunities...</p>
+              </motion.div>
+              
+              {/* Skeleton Loaders */}
+              <div className="skeleton-jobs">
+                {[...Array(3)].map((_, index) => (
+                  <motion.div 
+                    key={index}
+                    className="skeleton-job-card"
+                    variants={fadeInUp}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="skeleton-header">
+                      <div className="skeleton-title"></div>
+                      <div className="skeleton-meta">
+                        <div className="skeleton-tag"></div>
+                        <div className="skeleton-tag"></div>
+                        <div className="skeleton-tag"></div>
+                      </div>
+                    </div>
+                    <div className="skeleton-actions">
+                      <div className="skeleton-btn"></div>
+                      <div className="skeleton-btn"></div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           ) : (
             <motion.div className="jobs-list" variants={staggerContainer}>
-              {filteredJobs.length === 0 ? (
+              {filteredAndSortedJobs.length === 0 ? (
                 <motion.div className="no-jobs" variants={fadeInUp}>
-                  <p>No job openings found for the selected department.</p>
+                  <div className="no-jobs-content">
+                    <motion.div 
+                      className="no-jobs-icon"
+                      variants={floatingVariants}
+                      animate="animate"
+                    >
+                      🔍
+                    </motion.div>
+                    <h3>No positions found</h3>
+                    <p>
+                      {searchQuery || filterDepartment !== 'all' || filterLocation !== 'all' || filterType !== 'all'
+                        ? 'No job openings match your current search criteria.'
+                        : 'No job openings are currently available.'}
+                    </p>
+                    {(searchQuery || filterDepartment !== 'all' || filterLocation !== 'all' || filterType !== 'all') && (
+                      <motion.button
+                        className="btn btn-outline"
+                        onClick={handleClearFilters}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Clear All Filters
+                      </motion.button>
+                    )}
+                  </div>
                 </motion.div>
               ) : (
                 <AnimatePresence>
-                  {filteredJobs.map((job, index) => (
+                  {filteredAndSortedJobs.map((job, index) => (
                     <motion.div 
                       key={job.id} 
                       className="job-card"
@@ -487,12 +852,56 @@ const Careers: React.FC = () => {
                     >
                       <div className="job-header">
                         <div className="job-title-section">
-                          <h3 className="job-title">{job.title}</h3>
+                          <motion.h3 
+                            className="job-title"
+                            whileHover={{ color: '#007bff' }}
+                          >
+                            {job.title}
+                          </motion.h3>
                           <div className="job-meta">
-                            <span className="job-department">{job.department}</span>
-                            <span className="job-location">{job.location}</span>
-                            <span className="job-type">{job.type}</span>
+                            <motion.span 
+                              className="job-department"
+                              whileHover={cardHoverVariants.hover}
+                            >
+                              🏢 {job.department}
+                            </motion.span>
+                            <motion.span 
+                              className="job-location"
+                              whileHover={cardHoverVariants.hover}
+                            >
+                              📍 {job.location}
+                            </motion.span>
+                            <motion.span 
+                              className="job-type"
+                              whileHover={cardHoverVariants.hover}
+                            >
+                              ⏰ {job.type}
+                            </motion.span>
+                            {job.experience_level && (
+                              <motion.span 
+                                className="job-experience"
+                                whileHover={cardHoverVariants.hover}
+                              >
+                                🎯 {job.experience_level}
+                              </motion.span>
+                            )}
                           </div>
+                          {job.tags && job.tags.length > 0 && (
+                            <div className="job-tags">
+                              {job.tags.map((tag, tagIndex) => (
+                                <motion.span 
+                                  key={tagIndex}
+                                  className="job-tag"
+                                  whileHover={{ scale: 1.1 }}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: tagIndex * 0.1 }}
+                                >
+                                  {tag}
+                                </motion.span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div className="job-actions">
                           <motion.button 
@@ -501,7 +910,7 @@ const Careers: React.FC = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            {selectedJob?.id === job.id ? 'Hide Details' : 'View Details'}
+                            {selectedJob?.id === job.id ? '👁️ Hide Details' : '👁️ View Details'}
                           </motion.button>
                           <motion.button 
                             className="btn btn-primary"
@@ -509,7 +918,7 @@ const Careers: React.FC = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            Apply Now
+                            🚀 Apply Now
                           </motion.button>
                         </div>
                       </div>

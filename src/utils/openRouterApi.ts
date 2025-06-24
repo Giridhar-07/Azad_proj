@@ -1,51 +1,36 @@
-import { Security } from './security';
-
 interface Message {
   role: string;
   content: string;
 }
 
-interface OpenRouterResponse {
-  id: string;
-  choices: {
-    message: {
-      content: string;
+interface GeminiResponse {
+  candidates: {
+    content: {
+      parts: {
+        text: string;
+      }[];
       role: string;
     };
-    finish_reason: string;
+    finishReason: string;
     index: number;
   }[];
-  created: number;
-  model: string;
-  object: string;
 }
 
 export class OpenRouterAPI {
-  private static API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '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';
-  private static API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-  private static MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324:free';
+  private static API_KEY = 'AIzaSyC9kTuY3qG7TO1KqFlLQIPe8b2VGvuY6k0';
+  private static API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+  private static MODEL = 'gemini-1.5-flash-latest';
   private static SITE_URL = window.location.origin;
   private static SITE_NAME = 'Azayd IT Consulting';
-  
-  // Debug logging
-  static {
-    console.log('OpenRouter API Configuration:');
-    console.log('API Key (first 10 chars):', this.API_KEY.substring(0, 10) + '...');
-    console.log('Model:', this.MODEL);
-    console.log('Environment variables loaded:', {
-      VITE_OPENROUTER_API_KEY: import.meta.env.VITE_OPENROUTER_API_KEY ? 'Present' : 'Missing',
-      VITE_OPENROUTER_MODEL: import.meta.env.VITE_OPENROUTER_MODEL || 'Not set'
-    });
-  }
-  
-  // Rate limiting
-  private static lastRequestTime: number = 0;
-  private static requestsInLastMinute: number = 0;
-  private static MAX_REQUESTS_PER_MINUTE: number = 5;
-  private static COOLDOWN_PERIOD: number = 60000; // 1 minute in milliseconds
+
+  // Rate limiting properties
+  private static requestsInLastMinute = 0;
+  private static lastRequestTime = 0;
+  private static readonly MAX_REQUESTS_PER_MINUTE = 15; // Gemini has different rate limits
+  private static readonly COOLDOWN_PERIOD = 60000; // 1 minute
 
   /**
-   * Check if we're within rate limits
+   * Check if we can make a request based on rate limiting
    */
   private static checkRateLimit(): boolean {
     const now = Date.now();
@@ -68,7 +53,28 @@ export class OpenRouterAPI {
   }
 
   /**
-   * Generate a response using the Deepseek API
+   * Convert OpenRouter-style messages to Gemini format
+   */
+  private static convertMessagesToGeminiFormat(messages: Message[]) {
+    const contents = [];
+    let systemInstruction = '';
+    
+    for (const message of messages) {
+      if (message.role === 'system') {
+        systemInstruction = message.content;
+      } else {
+        contents.push({
+          role: message.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: message.content }]
+        });
+      }
+    }
+    
+    return { contents, systemInstruction };
+  }
+
+  /**
+   * Generate a response using the Gemini API
    */
   public static async generateResponse(messages: Message[]): Promise<string> {
     // Check rate limit
@@ -77,25 +83,53 @@ export class OpenRouterAPI {
     }
 
     try {
-      const response = await fetch(this.API_URL, {
+      const { contents, systemInstruction } = this.convertMessagesToGeminiFormat(messages);
+      
+      const requestBody: any = {
+        contents: contents,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+        },
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_HARASSMENT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_HATE_SPEECH',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          }
+        ]
+      };
+      
+      if (systemInstruction) {
+        requestBody.systemInstruction = {
+          parts: [{ text: systemInstruction }]
+        };
+      }
+
+      const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.API_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': this.SITE_URL,
-          'X-Title': this.SITE_NAME,
         },
-        body: JSON.stringify({
-          model: this.MODEL,
-          messages: messages,
-          stream: true,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        console.error('OpenRouter API Response Error:');
+        console.error('Gemini API Response Error:');
         console.error('Status:', response.status, response.statusText);
-        console.error('Headers:', Object.fromEntries(response.headers.entries()));
         
         let errorData;
         try {
@@ -111,62 +145,32 @@ export class OpenRouterAPI {
         const errorMessage = errorData.error?.message || errorData.message || 'Unknown error';
         
         if (response.status === 401) {
-          throw new Error(`Authentication Error (401): ${errorMessage}. Please check:\n1. API key is valid and not expired\n2. Model training is enabled in OpenRouter settings\n3. Account has sufficient credits\n4. Try using a different model like deepseek/deepseek-v3`);
+          throw new Error(`Authentication Error (401): ${errorMessage}. Please check your Gemini API key.`);
+        }
+        
+        if (response.status === 429) {
+          throw new Error(`Rate limit exceeded (429): ${errorMessage}. Please try again later.`);
         }
         
         throw new Error(`API Error ${response.status}: ${errorMessage}`);
       }
 
-      // Handle streaming response
-      if (!response.body) {
-        throw new Error('Response body is null');
-      }
-
-      return this.handleStreamResponse(response);
-    } catch (error) {
-      console.error('OpenRouter API error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle streaming response from the API
-   */
-  private static async handleStreamResponse(response: Response): Promise<string> {
-    const reader = response.body!.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let result = '';
-    
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') continue;
-            
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices[0]?.delta?.content || '';
-              result += content;
-            } catch (e) {
-              console.error('Error parsing JSON from stream:', e);
-            }
-          }
-        }
+      const data: GeminiResponse = await response.json();
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        throw new Error('No response generated by Gemini API');
       }
       
-      return result;
+      const candidate = data.candidates[0];
+      if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+        throw new Error('Invalid response format from Gemini API');
+      }
+      
+      return candidate.content.parts[0].text || '';
+      
     } catch (error) {
-      console.error('Stream reading error:', error);
+      console.error('Gemini API error:', error);
       throw error;
-    } finally {
-      reader.releaseLock();
     }
   }
 

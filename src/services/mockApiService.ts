@@ -1,4 +1,4 @@
-import { Service, TeamMember, JobPosting, ContactMessage } from './api';
+import type { Service, TeamMember, JobPosting, ContactMessage } from './api';
 import { mockServices, mockTeamMembers, mockJobPostings } from '../utils/mockData';
 
 // Mock API service that returns the mock data instead of making actual API calls

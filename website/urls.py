@@ -24,18 +24,21 @@ urlpatterns = [
     # API endpoints - Core ViewSets
     path('api/', include(router.urls)),
     
-    # API endpoints - Custom function-based views
+    # Enhanced API endpoints for modern frontend integration
     path('api/contact/', api_views.contact_message, name='api_contact'),
     path('api/health/', api_views.health_check, name='api_health'),
     path('api/homepage/', api_views.homepage_data, name='api_homepage'),
     
-    # API endpoints - Additional custom actions
-    path('api/services/featured/', api_views.ServiceViewSet.as_view({'get': 'featured'}), name='api_services_featured'),
-    path('api/services/stats/', api_views.ServiceViewSet.as_view({'get': 'stats'}), name='api_services_stats'),
-    path('api/team/leadership/', api_views.TeamMemberViewSet.as_view({'get': 'leadership'}), name='api_team_leadership'),
-    path('api/jobs/recent/', api_views.JobPostingViewSet.as_view({'get': 'recent'}), name='api_jobs_recent'),
-    path('api/jobs/departments/', api_views.JobPostingViewSet.as_view({'get': 'departments'}), name='api_jobs_departments'),
-    path('api/jobs/locations/', api_views.JobPostingViewSet.as_view({'get': 'locations'}), name='api_jobs_locations'),
+    # Featured content endpoints
+    path('api/services/featured/', api_views.featured_services, name='api_featured_services'),
+    path('api/team/highlights/', api_views.team_highlights, name='api_team_highlights'),
+    
+    # Specific data endpoints
+    path('api/services/stats/', api_views.service_stats, name='api_service_stats'),
+    path('api/team/leadership/', api_views.team_leadership, name='api_team_leadership'),
+    path('api/jobs/recent/', api_views.recent_jobs, name='api_recent_jobs'),
+    path('api/jobs/departments/', api_views.job_departments, name='api_job_departments'),
+    path('api/jobs/locations/', api_views.job_locations, name='api_job_locations'),
     
     # Legacy function-based view redirects (for backward compatibility)
     path('home/', views.home, name='home_legacy'),
