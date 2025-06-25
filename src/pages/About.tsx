@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, useScroll, useTransform, useInView, AnimatePresence, useSpring } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { Environment, OrbitControls, PerspectiveCamera } from '@react-three/drei';
@@ -248,25 +248,50 @@ const About: React.FC = () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
-      // Fetch team members with enhanced error handling
-      const members = await apiService.getTeamMembers();
-      console.log('Fetched team members:', members);
-      // Validate and enhance data
-      const enhancedMembers = members.map(member => ({
-        ...member,
-        skills: member.skills || [],
-        years_experience: member.years_experience || 0,
-        is_leadership: member.is_leadership || false,
-        department: member.department || 'General',
-        achievements: member.achievements || []
-      }));
+      // Fetch team highlights for the about page
+      const teamHighlights = await apiService.getTeamHighlights();
       
-      setState(prev => ({
-        ...prev,
-        teamMembers: enhancedMembers,
-        loading: false,
-        error: null
-      }));
+      if (teamHighlights.success && teamHighlights.results.length > 0) {
+        // Use team highlights if available
+        const enhancedMembers = teamHighlights.results.map(member => ({
+          ...member,
+          skills: member.skills || [],
+          years_experience: member.years_experience || 0,
+          is_leadership: member.is_leadership || false,
+          department: member.department || 'General',
+          achievements: member.achievements || []
+        }));
+        
+        setState(prev => ({
+          ...prev,
+          teamMembers: enhancedMembers,
+          loading: false,
+          error: null
+        }));
+      } else {
+        // Fallback to regular team members
+        const teamData = await apiService.getTeamMembers({
+          ordering: '-is_leadership,-years_experience',
+          page: 1
+        });
+        
+        const members = teamData.results || [];
+        const enhancedMembers = members.slice(0, 8).map(member => ({
+          ...member,
+          skills: member.skills || [],
+          years_experience: member.years_experience || 0,
+          is_leadership: member.is_leadership || false,
+          department: member.department || 'General',
+          achievements: member.achievements || []
+        }));
+        
+        setState(prev => ({
+          ...prev,
+          teamMembers: enhancedMembers,
+          loading: false,
+          error: null
+        }));
+      }
       
     } catch (error) {
       console.error('Error fetching team members:', error);

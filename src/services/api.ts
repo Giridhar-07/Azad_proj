@@ -276,17 +276,46 @@ export const apiService = {
     }
   },
 
-  // Team Members - enhanced with pagination support
-  getTeamMembers: async (params?: { page?: number; role?: string }): Promise<TeamMember[]> => {
+  // Team Members - enhanced with pagination and filtering support
+  getTeamMembers: async (params?: { 
+    page?: number; 
+    role?: string; 
+    department?: string;
+    search?: string;
+    ordering?: string;
+  }): Promise<{
+    results: TeamMember[];
+    count: number;
+    next: string | null;
+    previous: string | null;
+    metadata?: {
+      total_active_members: number;
+      leadership_count: number;
+      departments: string[];
+      last_updated: string;
+    };
+  }> => {
     if (USE_MOCK_DATA) {
-      return mockApiService.getTeamMembers();
+      const members = await mockApiService.getTeamMembers();
+      return {
+        results: members,
+        count: members.length,
+        next: null,
+        previous: null
+      };
     }
     try {
-      const response = await axios.get('/api/team/', { params });
-      return response.data.results || response.data;
+      const response = await api.get('/api/team/', { params });
+      return response.data;
     } catch (error) {
       console.error('Error fetching team members:', error);
-      return mockApiService.getTeamMembers();
+      const members = await mockApiService.getTeamMembers();
+      return {
+        results: members,
+        count: members.length,
+        next: null,
+        previous: null
+      };
     }
   },
 
@@ -295,11 +324,148 @@ export const apiService = {
       return mockApiService.getTeamMember(id);
     }
     try {
-      const response = await axios.get(`/api/team/${id}/`);
+      const response = await api.get(`/api/team/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching team member ${id}:`, error);
       return mockApiService.getTeamMember(id);
+    }
+  },
+
+  // Team Leadership - get leadership members
+  getTeamLeadership: async (): Promise<{
+    success: boolean;
+    results: TeamMember[];
+    count: number;
+    message?: string;
+  }> => {
+    if (USE_MOCK_DATA) {
+      const members = await mockApiService.getTeamMembers();
+      const leadership = members.filter(member => member.is_leadership);
+      return {
+        success: true,
+        results: leadership,
+        count: leadership.length
+      };
+    }
+    try {
+      const response = await api.get('/api/team/leadership/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching team leadership:', error);
+      return {
+        success: false,
+        results: [],
+        count: 0,
+        message: 'Failed to fetch leadership team'
+      };
+    }
+  },
+
+  // Team Departments - get all departments and roles
+  getTeamDepartments: async (): Promise<{
+    success: boolean;
+    departments: string[];
+    roles: string[];
+    metadata?: {
+      total_departments: number;
+      total_roles: number;
+      last_updated: string;
+    };
+  }> => {
+    if (USE_MOCK_DATA) {
+      return {
+        success: true,
+        departments: ['Engineering', 'Design', 'Marketing', 'Operations'],
+        roles: ['Developer', 'Designer', 'Manager', 'Analyst']
+      };
+    }
+    try {
+      const response = await api.get('/api/team/departments/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching team departments:', error);
+      return {
+        success: false,
+        departments: [],
+        roles: []
+      };
+    }
+  },
+
+  // Team Statistics - comprehensive team stats
+  getTeamStats: async (): Promise<{
+    success: boolean;
+    stats?: {
+      total_members: number;
+      leadership_count: number;
+      departments_count: number;
+      experience_distribution: { [key: string]: number };
+      average_experience: number;
+      total_skills: number;
+    };
+    last_updated?: string;
+  }> => {
+    if (USE_MOCK_DATA) {
+      return {
+        success: true,
+        stats: {
+          total_members: 25,
+          leadership_count: 5,
+          departments_count: 4,
+          experience_distribution: {
+            'Junior (0-2 years)': 8,
+            'Mid-level (3-5 years)': 10,
+            'Senior (6+ years)': 7
+          },
+          average_experience: 4.2,
+          total_skills: 45
+        }
+      };
+    }
+    try {
+      const response = await api.get('/api/team/stats/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching team stats:', error);
+      return {
+        success: false
+      };
+    }
+  },
+
+  // Team Highlights - get featured team members for about page
+  getTeamHighlights: async (): Promise<{
+    success: boolean;
+    results: TeamMember[];
+    metadata?: {
+      total_highlighted: number;
+      selection_criteria: string;
+      last_updated: string;
+    };
+  }> => {
+    if (USE_MOCK_DATA) {
+      const members = await mockApiService.getTeamMembers();
+      const highlights = members.slice(0, 6);
+      return {
+        success: true,
+        results: highlights,
+        metadata: {
+          total_highlighted: highlights.length,
+          selection_criteria: 'leadership_and_experience',
+          last_updated: new Date().toISOString()
+        }
+      };
+    }
+    try {
+      const response = await api.get('/api/team/highlights/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching team highlights:', error);
+      return {
+        success: false,
+        results: []
+      };
     }
   },
 

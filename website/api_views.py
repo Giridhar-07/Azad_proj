@@ -12,6 +12,7 @@ from django.db import models
 from django.db.models import Avg, Count, Q
 from django.core.cache import cache
 from django.http import JsonResponse
+from django.core.exceptions import ValidationError
 import logging
 import json
 import re
@@ -647,6 +648,7 @@ class TeamMemberViewSet(viewsets.ReadOnlyModelViewSet):
         return response
     
     @action(detail=False, methods=['get'])
+    @method_decorator(cache_page(60 * 10))  # Cache for 10 minutes
     def leadership(self, request):
         """
         Get leadership team members with enhanced information.
@@ -655,13 +657,20 @@ class TeamMemberViewSet(viewsets.ReadOnlyModelViewSet):
         additional metadata and achievements.
         """
         try:
-            # Get leadership members based on position keywords
+            # Get leadership members based on is_leadership field first, then position keywords
             leadership = TeamMember.objects.filter(
                 is_active=True,
-                position__regex=r'(director|manager|lead|head|ceo|cto|founder)'
+                is_leadership=True
             ).order_by('order', 'name')[:8]
             
-            # If no leadership found, get first 4 by order
+            # If no leadership found by flag, try position keywords
+            if not leadership.exists():
+                leadership = TeamMember.objects.filter(
+                    is_active=True,
+                    position__iregex=r'(director|manager|lead|head|ceo|cto|founder|chief)'
+                ).order_by('order', 'name')[:8]
+            
+            # Final fallback to first 4 by order
             if not leadership.exists():
                 leadership = TeamMember.objects.filter(
                     is_active=True
@@ -670,90 +679,208 @@ class TeamMemberViewSet(viewsets.ReadOnlyModelViewSet):
             serializer = TeamMemberSerializer(leadership, many=True)
             
             return Response({
-                'success': True,
+                'status': 'success',
                 'count': leadership.count(),
-                'leadership_members': serializer.data,
+                'results': serializer.data,
                 'metadata': {
                     'total_leadership': leadership.count(),
-                    'last_updated': timezone.now().isoformat()
+                    'last_updated': timezone.now().isoformat(),
+                    'cache_duration': '10 minutes'
                 }
-            })
+            }, status=status.HTTP_200_OK)
+            
+        except ValidationError as e:
+            logger.warning(f"Validation error in leadership endpoint: {str(e)}")
+            return Response({
+                'status': 'error',
+                'message': 'Invalid request parameters',
+                'details': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
             logger.error(f"Error fetching leadership team: {str(e)}")
             return Response({
-                'success': False,
-                'error': 'Failed to fetch leadership team',
-                'leadership_members': []
-            }, status=500)
+                'status': 'error',
+                'message': 'Internal server error while fetching leadership team',
+                'details': 'Please try again later'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
+    @method_decorator(cache_page(60 * 30))  # Cache for 30 minutes
     def departments(self, request):
         """
-        Get all available departments/roles for filtering.
+        Get all available departments/roles for filtering with enhanced metadata.
         """
         try:
+            # Get unique departments
             departments = TeamMember.objects.filter(
+                is_active=True
+            ).exclude(
+                department__isnull=True
+            ).exclude(
+                department__exact=''
+            ).values_list('department', flat=True).distinct()
+            
+            # Get unique positions for role filtering
+            positions = TeamMember.objects.filter(
                 is_active=True
             ).values_list('position', flat=True).distinct()
             
-            # Extract unique role keywords
-            roles = set()
-            for position in departments:
-                # Split position and extract meaningful keywords
-                words = position.lower().split()
-                for word in words:
-                    if len(word) > 3 and word not in ['and', 'the', 'of', 'at']:
-                        roles.add(word.title())
+            # Extract unique role keywords from positions
+            role_keywords = set(['all'])
+            for position in positions:
+                if position:
+                    # Extract meaningful keywords from position titles
+                    words = re.findall(r'\b\w+\b', position.lower())
+                    for word in words:
+                        if len(word) > 2 and word not in ['and', 'the', 'of', 'for', 'with']:
+                            role_keywords.add(word.title())
             
             return Response({
-                'success': True,
-                'departments': sorted(list(roles)),
-                'total_departments': len(roles)
-            })
+                'status': 'success',
+                'data': {
+                    'departments': sorted(list(departments)),
+                    'roles': sorted(list(role_keywords)),
+                    'positions': sorted(list(positions))
+                },
+                'metadata': {
+                    'total_departments': len(departments),
+                    'total_roles': len(role_keywords),
+                    'last_updated': timezone.now().isoformat(),
+                    'cache_duration': '30 minutes'
+                }
+            }, status=status.HTTP_200_OK)
             
         except Exception as e:
             logger.error(f"Error fetching departments: {str(e)}")
             return Response({
-                'success': False,
-                'error': 'Failed to fetch departments',
-                'departments': []
-            }, status=500)
+                'status': 'error',
+                'message': 'Failed to fetch departments',
+                'data': {
+                    'departments': [],
+                    'roles': ['all'],
+                    'positions': []
+                }
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
+    @method_decorator(cache_page(60 * 15))  # Cache for 15 minutes
     def stats(self, request):
         """
-        Get comprehensive team statistics for the about page.
+        Get comprehensive team statistics for analytics and display.
         """
         try:
-            total_members = TeamMember.objects.filter(is_active=True).count()
-            leadership_count = TeamMember.objects.filter(
-                is_active=True,
-                position__regex=r'(director|manager|lead|head|ceo|cto|founder)'
-            ).count()
+            cache_key = 'team_stats_v2'
+            stats = cache.get(cache_key)
             
-            departments = TeamMember.objects.filter(
-                is_active=True
-            ).values_list('position', flat=True).distinct().count()
+            if stats is None:
+                queryset = TeamMember.objects.filter(is_active=True)
+                
+                # Calculate comprehensive statistics
+                stats = {
+                    'total_members': queryset.count(),
+                    'leadership_count': queryset.filter(is_leadership=True).count(),
+                    'departments': {
+                        'count': queryset.exclude(
+                            department__isnull=True
+                        ).exclude(
+                            department__exact=''
+                        ).values('department').distinct().count(),
+                        'list': list(queryset.exclude(
+                            department__isnull=True
+                        ).exclude(
+                            department__exact=''
+                        ).values_list('department', flat=True).distinct())
+                    },
+                    'experience_distribution': {
+                        'junior': queryset.filter(years_experience__lt=3).count(),
+                        'mid_level': queryset.filter(
+                            years_experience__gte=3, 
+                            years_experience__lt=7
+                        ).count(),
+                        'senior': queryset.filter(years_experience__gte=7).count()
+                    },
+                    'avg_experience': queryset.aggregate(
+                        avg_exp=Avg('years_experience')
+                    )['avg_exp'] or 0,
+                    'skills_count': sum(
+                        len(member.skills) if member.skills else 0 
+                        for member in queryset
+                    ),
+                    'last_updated': timezone.now().isoformat()
+                }
+                
+                cache.set(cache_key, stats, 60 * 15)  # Cache for 15 minutes
             
             return Response({
-                'success': True,
-                'stats': {
-                    'total_members': total_members,
-                    'leadership_count': leadership_count,
-                    'departments_count': departments,
-                    'average_experience': 5.5,  # This could be calculated from a new field
-                    'retention_rate': 95.0,     # This could be calculated from hire/leave dates
-                },
-                'last_updated': timezone.now().isoformat()
-            })
+                'status': 'success',
+                'data': stats,
+                'metadata': {
+                    'cache_duration': '15 minutes',
+                    'generated_at': timezone.now().isoformat()
+                }
+            }, status=status.HTTP_200_OK)
             
         except Exception as e:
             logger.error(f"Error fetching team stats: {str(e)}")
             return Response({
-                'success': False,
-                'error': 'Failed to fetch team statistics'
-            }, status=500)
+                'status': 'error',
+                'message': 'Failed to fetch team statistics',
+                'data': {
+                    'total_members': 0,
+                    'leadership_count': 0,
+                    'departments': {'count': 0, 'list': []},
+                    'experience_distribution': {'junior': 0, 'mid_level': 0, 'senior': 0},
+                    'avg_experience': 0,
+                    'skills_count': 0
+                }
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['get'])
+    def highlights(self, request):
+        """
+        Get team highlights for homepage and about page display.
+        Enhanced with better fallback logic and metadata.
+        """
+        try:
+            # Try to get leadership members first
+            highlights = TeamMember.objects.filter(
+                is_active=True,
+                is_leadership=True
+            ).order_by('order', 'name')[:4]
+            
+            # If no leadership, get members with most experience
+            if not highlights.exists():
+                highlights = TeamMember.objects.filter(
+                    is_active=True
+                ).order_by('-years_experience', 'order', 'name')[:4]
+            
+            # Final fallback to any active members
+            if not highlights.exists():
+                highlights = TeamMember.objects.filter(
+                    is_active=True
+                ).order_by('order', 'name')[:4]
+            
+            serializer = TeamMemberSerializer(highlights, many=True)
+            
+            return Response({
+                'status': 'success',
+                'count': highlights.count(),
+                'results': serializer.data,
+                'metadata': {
+                    'selection_criteria': 'leadership_priority',
+                    'total_active_members': TeamMember.objects.filter(is_active=True).count(),
+                    'last_updated': timezone.now().isoformat()
+                }
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error fetching team highlights: {str(e)}")
+            return Response({
+                'status': 'error',
+                'message': 'Failed to fetch team highlights',
+                'results': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class JobPostingViewSet(viewsets.ReadOnlyModelViewSet):
