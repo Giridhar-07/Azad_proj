@@ -249,7 +249,7 @@ const About: React.FC = () => {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
       // Fetch team highlights for the about page
-      const teamHighlights = await apiService.getTeamHighlights();
+      const teamHighlights = await apiService.getEnhancedTeamHighlights();
       
       if (teamHighlights.success && teamHighlights.results.length > 0) {
         // Use team highlights if available
@@ -425,9 +425,7 @@ const About: React.FC = () => {
           
           {/* Interactive Statistics */}
           <Suspense fallback={<div className="loading-stats">Loading Statistics...</div>}>
-            <InteractiveStats 
-              stats={companyStatsArray} // Changed to companyStatsArray
-            />
+            <InteractiveStats />
           </Suspense>
           
           {/* Navigation Pills */}

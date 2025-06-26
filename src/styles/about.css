@@ -3,9 +3,10 @@
 /* General Page Layout */
 .about-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--background-gradient);
   position: relative;
   overflow-x: hidden;
+  transition: background var(--transition-theme);
 }
 
 /* Hero Section */
@@ -31,16 +32,19 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  color: white;
+  color: var(--text-color);
   max-width: 1200px;
   padding: 0 2rem;
+  transition: color var(--transition-theme);
 }
 
 .hero-text h1 {
   font-size: 4rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
+  color: var(--text-color);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  transition: color var(--transition-theme);
 }
 
 .gradient-text {
@@ -93,7 +97,7 @@
   display: block;
   font-size: 3rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
@@ -151,12 +155,12 @@
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #333;
+  color: var(--text-color);
 }
 
 .section-header p {
   font-size: 1.2rem;
-  color: #666;
+  color: var(--text-light);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -230,7 +234,7 @@
 }
 
 .results-count {
-  color: #666;
+  color: var(--text-light);
   font-size: 0.9rem;
 }
 
@@ -256,8 +260,9 @@
 
 .loading-container p {
   font-size: 1.2rem;
-  color: #666;
+  color: var(--text-light);
   margin-bottom: 3rem;
+  transition: color var(--transition-theme);
 }
 
 /* Skeleton Grid */
@@ -432,13 +437,13 @@
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: #333;
+  color: var(--text-color);
   transition: color 0.3s ease;
 }
 
 .member-position {
   font-size: 1rem;
-  color: #667eea;
+  color: var(--primary-color);
   font-weight: 500;
   margin-bottom: 1rem;
   text-transform: uppercase;
@@ -524,14 +529,16 @@
 .story-text h3 {
   font-size: 2rem;
   margin-bottom: 1.5rem;
-  color: #333;
+  color: var(--text-color);
+  transition: color var(--transition-theme);
 }
 
 .story-text p {
   font-size: 1.1rem;
   line-height: 1.8;
-  color: #666;
+  color: var(--text-light);
   margin-bottom: 1.5rem;
+  transition: color var(--transition-theme);
 }
 
 /* Values Section */
@@ -571,12 +578,14 @@
 .value-card h4 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #333;
+  color: var(--text-color);
+  transition: color var(--transition-theme);
 }
 
 .value-card p {
-  color: #666;
+  color: var(--text-light);
   line-height: 1.6;
+  transition: color var(--transition-theme);
 }
 
 /* Timeline */
@@ -683,12 +692,12 @@
 
 .cta-btn.primary {
   background: rgba(255, 255, 255, 0.9);
-  color: #667eea;
+  color: var(--primary-color);
 }
 
 .cta-btn.primary:hover {
   background: white;
-  color: #5a67d8;
+  color: var(--primary-color);
 }
 
 /* Responsive Design */

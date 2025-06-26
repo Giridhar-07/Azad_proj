@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import AnimatedLogoComponent from './AnimatedLogoComponent';
+import ThemeToggle from './ThemeToggle';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -65,46 +66,49 @@ const Header: React.FC = () => {
           <span></span>
         </button>
         
-        <nav 
-          ref={navRef}
-          className={`header__nav ${isMobileMenuOpen ? 'header__nav--open' : ''}`}
-        >
-          <Link 
-            to="/" 
-            className={`header__link ${location.pathname === '/' ? 'active' : ''}`}
+        <div className="header__nav-container">
+          <nav 
+            ref={navRef}
+            className={`header__nav ${isMobileMenuOpen ? 'header__nav--open' : ''}`}
           >
-            <span className="header__link-text">Home</span>
-            <span className="header__link-indicator"></span>
-          </Link>
-          <Link 
-            to="/services" 
-            className={`header__link ${location.pathname === '/services' ? 'active' : ''}`}
-          >
-            <span className="header__link-text">Services</span>
-            <span className="header__link-indicator"></span>
-          </Link>
-          <Link 
-            to="/about" 
-            className={`header__link ${location.pathname === '/about' ? 'active' : ''}`}
-          >
-            <span className="header__link-text">About</span>
-            <span className="header__link-indicator"></span>
-          </Link>
-          <Link 
-            to="/careers" 
-            className={`header__link ${location.pathname === '/careers' ? 'active' : ''}`}
-          >
-            <span className="header__link-text">Careers</span>
-            <span className="header__link-indicator"></span>
-          </Link>
-          <Link 
-            to="/contact" 
-            className={`header__link ${location.pathname === '/contact' ? 'active' : ''}`}
-          >
-            <span className="header__link-text">Contact</span>
-            <span className="header__link-indicator"></span>
-          </Link>
-        </nav>
+            <Link 
+              to="/" 
+              className={`header__link ${location.pathname === '/' ? 'active' : ''}`}
+            >
+              <span className="header__link-text">Home</span>
+              <span className="header__link-indicator"></span>
+            </Link>
+            <Link 
+              to="/services" 
+              className={`header__link ${location.pathname === '/services' ? 'active' : ''}`}
+            >
+              <span className="header__link-text">Services</span>
+              <span className="header__link-indicator"></span>
+            </Link>
+            <Link 
+              to="/about" 
+              className={`header__link ${location.pathname === '/about' ? 'active' : ''}`}
+            >
+              <span className="header__link-text">About</span>
+              <span className="header__link-indicator"></span>
+            </Link>
+            <Link 
+              to="/careers" 
+              className={`header__link ${location.pathname === '/careers' ? 'active' : ''}`}
+            >
+              <span className="header__link-text">Careers</span>
+              <span className="header__link-indicator"></span>
+            </Link>
+            <Link 
+              to="/contact" 
+              className={`header__link ${location.pathname === '/contact' ? 'active' : ''}`}
+            >
+              <span className="header__link-text">Contact</span>
+              <span className="header__link-indicator"></span>
+            </Link>
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

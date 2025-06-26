@@ -3,9 +3,10 @@
 /* General Page Layout */
 .careers-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--background-gradient);
   position: relative;
   overflow-x: hidden;
+  transition: var(--transition-theme);
 }
 
 /* Hero Section */
@@ -37,17 +38,19 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  color: white;
+  color: var(--text-color);
   max-width: 1200px;
   padding: 0 2rem;
+  transition: var(--transition-theme);
 }
 
 .hero-badge {
   display: inline-block;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-background);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--glass-border);
   border-radius: 50px;
+  transition: var(--transition-theme);
   padding: 0.5rem 1.5rem;
   margin-bottom: 2rem;
   font-size: 0.9rem;
@@ -112,7 +115,7 @@
   display: block;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #4ecdc4;
+  color: var(--accent-color);
   margin-bottom: 0.5rem;
 }
 
@@ -145,19 +148,19 @@
   margin-bottom: 1rem;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #667eea;
+  color: var(--primary-color);
 }
 
 .section-title {
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #2d3748;
+  color: var(--text-color);
 }
 
 .section-subtitle {
   font-size: 1.1rem;
-  color: #718096;
+  color: var(--text-light);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -243,12 +246,12 @@
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: #f7fafc;
+  background: var(--light-bg);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
   background: white;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -258,7 +261,7 @@
   right: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  background: #e2e8f0;
+  background: var(--light-bg);
   border: none;
   border-radius: 50%;
   width: 24px;
@@ -273,7 +276,7 @@
 }
 
 .clear-search:hover {
-  background: #cbd5e0;
+  background: var(--light-bg);
   color: #2d3748;
 }
 
@@ -337,7 +340,7 @@
 
 .results-count {
   font-weight: 600;
-  color: #4a5568;
+  color: var(--text-light);
   font-size: 1rem;
 }
 
@@ -621,7 +624,7 @@
   content: '✓';
   position: absolute;
   left: 0;
-  color: #48bb78;
+  color: var(--success-color);
   font-weight: bold;
 }
 

@@ -63,10 +63,12 @@ export interface TeamMember {
   twitter_url?: string;
   github_url?: string;
   email?: string;
-  is_leadership: boolean;
+  is_leadership?: boolean;
   order: number;
-  skills: string[];
-  years_experience: number;
+  skills?: string[];
+  years_experience?: number;
+  department?: string;
+  achievements?: string[];
 }
 
 // Job Posting Types

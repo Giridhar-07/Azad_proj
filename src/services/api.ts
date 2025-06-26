@@ -435,7 +435,7 @@ export const apiService = {
   },
 
   // Team Highlights - get featured team members for about page
-  getTeamHighlights: async (): Promise<{
+  getEnhancedTeamHighlights: async (): Promise<{
     success: boolean;
     results: TeamMember[];
     metadata?: {

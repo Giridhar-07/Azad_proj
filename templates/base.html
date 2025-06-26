@@ -1,8 +1,11 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="description" content="Azayd IT Consulting Services - Professional IT solutions and consulting services in Bengaluru">
     <meta name="keywords" content="IT consulting, software development, digital transformation, Bengaluru, technology solutions">
     <title>{% block title %}Azayd IT - Innovative Technology Solutions{% endblock %}</title>
@@ -10,26 +13,31 @@
     <!-- Preload critical resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" as="script">
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" as="script">
-    <link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.js" as="script">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" as="script" crossorigin="anonymous" integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ==">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" as="script" crossorigin="anonymous" integrity="sha512-16esztaSRplJROstbIXwJlXDtmuMuPAgLjjLXxeMQ7V3IfJjCEV7Ym9JtSfpDBIzOIQkylJdHwGH9d2C/VRTQ==">
+    <link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.js" as="script" crossorigin="anonymous" integrity="sha384-wziAfh6b/qS7yCY1/AQ6Ae4g9aBkZpxwxuI1sSzNPbKD0jMT5UvehGhh0tS7O+qv">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" crossorigin="anonymous">
     
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==">
+    
+    {% load security_tags %}
     
     <!-- AOS Animation Library -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" crossorigin="anonymous" integrity="sha384-eGRU+iyNSRnKH0Dgp8/R0YYQCz7WsXA/61O+6iIbuJnDXVEMshIrrQtZZKXz6z3g">
     
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     
-    <!-- Three.js and Animation Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- CSRF Token for AJAX Requests -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
     
-    <style>
+    <!-- Three.js and Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous" integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ==" nonce="{{ csp_nonce }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" crossorigin="anonymous" integrity="sha512-16esztaSRplJROstbIXwJlXDtmuMuPAgLjjLXxeMQ7V3IfJjCEV7Ym9JtSfpDBIzOIQkylJdHwGH9d2C/VRTQ==" nonce="{{ csp_nonce }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" crossorigin="anonymous" integrity="sha512-C1NvRoXGlCVJ5AKcF5RR9jE/1J2AJ/kjELqC2fQl9dYdIEEUMQEYGjlM4immsrYE2o2XG+5BlMDGVTHVsHQMg==" nonce="{{ csp_nonce }}"></script>
+    
+    <style nonce="{{ csp_nonce }}">
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -341,9 +349,9 @@
     </footer>
 
     <!-- AOS Animation Library -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" crossorigin="anonymous" integrity="sha384-wziAfh6b/qS7yCY1/AQ6Ae4g9aBkZpxwxuI1sSzNPbKD0jMT5UvehGhh0tS7O+qv" nonce="{{ csp_nonce }}"></script>
     
-    <script>
+    <script nonce="{{ csp_nonce }}">
         // Initialize AOS
         AOS.init({
             duration: 800,
@@ -430,6 +438,15 @@
         // Initialize 3D Logo
         document.addEventListener('DOMContentLoaded', () => {
             new Logo3D();
+            
+            // Setup CSRF token for AJAX requests
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Add CSRF token to all AJAX requests
+            document.addEventListener('ajaxSend', function(e) {
+                const xhr = e.detail.xhr;
+                xhr.setRequestHeader('X-CSRFToken', csrfToken);
+            });
         });
 
         // Smooth scrolling for navigation links

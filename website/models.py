@@ -1,12 +1,29 @@
 from django.db import models
 from django.utils.text import slugify
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
+from .storage import SecureFileStorage
+
+def validate_file_size(file):
+    """Validate file size (max 5MB)."""
+    max_size = 5 * 1024 * 1024  # 5MB
+    if file.size > max_size:
+        raise ValidationError(f'File size cannot exceed 5MB. Current size: {file.size/(1024*1024):.2f}MB')
+    return file
 
 class Service(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
     icon = models.CharField(max_length=50, help_text='Font Awesome icon name without the fa- prefix')
-    image = models.ImageField(upload_to='services/', blank=True, null=True)
+    image = models.ImageField(
+        upload_to='services/', 
+        blank=True, 
+        null=True,
+        storage=SecureFileStorage(),
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif']), validate_file_size],
+        help_text='Image file (max 5MB, jpg/png/gif only)'
+    )
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     tech_stack = models.CharField(max_length=500, blank=True, help_text='Comma-separated list of technologies')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -47,7 +64,12 @@ class TeamMember(models.Model):
     position = models.CharField(max_length=100, help_text="Job title or position")
     department = models.CharField(max_length=50, blank=True, help_text="Department or team")
     bio = models.TextField(help_text="Professional biography")
-    image = models.ImageField(upload_to='team/', help_text="Profile image")
+    image = models.ImageField(
+        upload_to='team/', 
+        storage=SecureFileStorage(),
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']), validate_file_size],
+        help_text="Profile image (max 5MB, jpg/png only)"
+    )
     
     # Social media links
     linkedin = models.URLField(blank=True, help_text="LinkedIn profile URL")

@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "start": "tsc && node dist/src/pages/service.js"
+    "start": "tsc && node dist/src/pages/service.js",
+    "build:prod": "NODE_ENV=production tsc && vite build --mode production",
+    "serve": "vite preview --port 3000",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@types/aos": "^3.0.7",
@@ -17,7 +21,9 @@
     "@vitejs/plugin-react": "^4.5.2",
     "aos": "^2.3.4",
     "gsap": "^3.12.5",
+    "terser": "^5.43.1",
     "typescript": "^5.5.3",
+    "vercel": "^44.2.5",
     "vite": "^5.4.2"
   },
   "dependencies": {

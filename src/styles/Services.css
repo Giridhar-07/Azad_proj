@@ -1,9 +1,10 @@
 /* Services Page Styles */
 .services-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--background-gradient);
   position: relative;
   overflow-x: hidden;
+  transition: background var(--transition-theme);
 }
 
 .services-page::before {
@@ -53,13 +54,14 @@
 
 /* Services Controls */
 .services-controls {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-background);
   backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 30px;
-  margin: 40px 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-2xl);
+  margin: var(--spacing-2xl) 0;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-normal);
 }
 
 /* Search Container */
@@ -76,23 +78,23 @@
 .search-input {
   width: 100%;
   padding: 15px 50px 15px 20px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--glass-border);
   border-radius: 50px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--glass-background);
+  color: var(--text-color);
   font-size: 1rem;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  backdrop-filter: blur(15px);
+  transition: all var(--transition-normal);
 }
 
 .search-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-light);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-color);
+  background: var(--card-background);
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
 }
 
@@ -175,7 +177,7 @@
 }
 
 .sort-select option {
-  background: #1a1a2e;
+  background: var(--card-background);
   color: white;
 }
 
@@ -205,7 +207,7 @@
 }
 
 .error-message {
-  color: #fca5a5;
+  color: var(--accent-color);
   font-size: 0.9rem;
 }
 
