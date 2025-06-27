@@ -8,6 +8,7 @@ import 'aos/dist/aos.css';
 import '../styles/about.css';
 import TechSphere from '../components/TechSphere';
 import { apiService, TeamMember as TeamMemberType } from '../services/api';
+import { SkeletonTeamGrid, SkeletonHero, SkeletonContainer } from '../components/SkeletonLoader';
 
 // Lazy load components for better performance
 const TeamMemberModal = lazy(() => import('../components/TeamMemberModal'));
@@ -557,38 +558,33 @@ const About: React.FC = () => {
             </div>
           </motion.div>
           
-          {/* Loading State */}
-          {state.loading && (
-            <motion.div 
-              className="loading-container"
-              variants={animationVariants.staggerItem}
-            >
-              <div className="loading-spinner"></div>
-              <p>Loading our amazing team...</p>
-            </motion.div>
-          )}
-          
-          {/* Error State with Retry */}
-          {state.error && (
-            <motion.div 
-              className="error-container"
-              variants={animationVariants.staggerItem}
-            >
-              <p className="error-message">{state.error}</p>
-              <motion.button
-                className="retry-button"
-                onClick={handleRetry}
-                disabled={state.isRetrying}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+          {/* Loading State with Skeleton */}
+          <SkeletonContainer
+            loading={state.loading}
+            skeleton={<SkeletonTeamGrid count={8} />}
+            className="team-section-loading"
+          >
+            {/* Error State with Retry */}
+            {state.error && (
+              <motion.div 
+                className="error-container"
+                variants={animationVariants.staggerItem}
               >
-                {state.isRetrying ? 'Retrying...' : 'Try Again'}
-              </motion.button>
-            </motion.div>
-          )}
-          
-          {/* Team Members Grid */}
-          {!state.loading && !state.error && (
+                <p className="error-message">{state.error}</p>
+                <motion.button
+                  className="retry-button"
+                  onClick={handleRetry}
+                  disabled={state.isRetrying}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {state.isRetrying ? 'Retrying...' : 'Try Again'}
+                </motion.button>
+              </motion.div>
+            )}
+            
+            {/* Team Members Grid */}
+            {!state.error && (
             <motion.div 
               className="team-grid"
               variants={animationVariants.staggerContainer}
@@ -653,6 +649,7 @@ const About: React.FC = () => {
               </AnimatePresence>
             </motion.div>
           )}
+          </SkeletonContainer>
           
           {/* No Results Message */}
           {!state.loading && !state.error && filteredTeamMembers.length === 0 && (
