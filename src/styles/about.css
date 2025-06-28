@@ -479,7 +479,8 @@
 .no-results {
   text-align: center;
   padding: 4rem 2rem;
-  color: #666;
+  color: var(--text-light);
+  transition: color var(--transition-theme);
 }
 
 .no-results-icon {
@@ -490,7 +491,8 @@
 .no-results h3 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #333;
+  color: var(--text-color);
+  transition: color var(--transition-theme);
 }
 
 .no-results p {
@@ -512,7 +514,7 @@
 
 .no-results button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-xl);
 }
 
 /* Company Story Section */
@@ -697,12 +699,13 @@
 }
 
 .cta-btn.primary {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card-background);
   color: var(--primary-color);
+  transition: background var(--transition-theme), color var(--transition-theme);
 }
 
 .cta-btn.primary:hover {
-  background: white;
+  background: var(--background);
   color: var(--primary-color);
 }
 
