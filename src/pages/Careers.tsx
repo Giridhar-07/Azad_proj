@@ -6,7 +6,9 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { apiService } from '../services/api';
 import '../styles/careers.css';
+import '../styles/resumeForm.css';
 import TechSphere from '../components/TechSphere';
+import ResumeForm from '../components/ResumeForm';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -170,6 +172,8 @@ const Careers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('date');
   const [activeSection, setActiveSection] = useState('');
+  const [showResumeForm, setShowResumeForm] = useState(false);
+  const [resumeSubmitted, setResumeSubmitted] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -387,16 +391,31 @@ const Careers: React.FC = () => {
   }, []);
 
   const handleApply = useCallback((job: JobPosting) => {
-    // In a real application, this would open an application form or redirect to an application page
-    alert(`Application process for ${job.title} would be initiated here.`);
+    // Navigate to the job detail page using React Router
+    window.location.href = `/careers/${job.id}`;
   }, []);
 
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
 
+  const handleResumeSuccess = () => {
+    setResumeSubmitted(true);
+    setTimeout(() => {
+      setShowResumeForm(false);
+    }, 2000);
+  };
+
   return (
     <div className="careers-page">
+      <AnimatePresence>
+        {showResumeForm && (
+          <ResumeForm 
+            onClose={() => setShowResumeForm(false)} 
+            onSuccess={handleResumeSuccess} 
+          />
+        )}
+      </AnimatePresence>
       {/* Enhanced Hero Section with 3D Sphere */}
       <motion.section 
         ref={heroRef}
@@ -1004,6 +1023,7 @@ const Careers: React.FC = () => {
                 variants={scaleIn}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setShowResumeForm(true)}
               >
                 Send Resume
               </motion.button>
@@ -1013,6 +1033,7 @@ const Careers: React.FC = () => {
                 variants={scaleIn}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => window.location.href = '/contact'}
               >
                 Schedule a Call
               </motion.button>

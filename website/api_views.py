@@ -1,9 +1,10 @@
 from rest_framework import viewsets, filters, status
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, action, parser_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
+from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
@@ -17,10 +18,11 @@ import logging
 import json
 import re
 
-from .models import Service, TeamMember, JobPosting, ContactMessage
+from .models import Service, TeamMember, JobPosting, ContactMessage, ResumeSubmission, JobApplication
 from .serializers import (
     ServiceSerializer, ServiceDetailSerializer,
-    TeamMemberSerializer, JobPostingSerializer, ContactMessageSerializer
+    TeamMemberSerializer, JobPostingSerializer, ContactMessageSerializer,
+    ResumeSubmissionSerializer, JobApplicationSerializer
 )
 
 # Configure logging
@@ -978,15 +980,19 @@ class JobPostingViewSet(viewsets.ReadOnlyModelViewSet):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def contact_message(request):
+@parser_classes([MultiPartParser, FormParser])
+def job_application(request):
     """
-    Enhanced API endpoint for submitting contact messages with validation and rate limiting.
+    API endpoint for submitting job applications with file upload support.
     
     Features:
+    - Job-specific application
+    - File upload handling (PDF, DOC, DOCX)
+    - Alternative link submission option
     - Input validation and sanitization
     - Rate limiting to prevent spam
+    - Email confirmation to applicant
     - Comprehensive error handling
-    - Success/error response formatting
     """
     if request.method == 'POST':
         try:
@@ -996,27 +1002,144 @@ def contact_message(request):
                 return Response(
                     {
                         'status': 'error',
-                        'message': 'Too many contact submissions. Please try again later.',
+                        'message': 'Too many submissions. Please try again later.',
                         'retry_after': throttle.wait()
                     },
                     status=status.HTTP_429_TOO_MANY_REQUESTS
                 )
             
-            serializer = ContactMessageSerializer(data=request.data)
+            # Handle form data with potential file upload
+            serializer = JobApplicationSerializer(data=request.data)
             if serializer.is_valid():
-                # Save the contact message
-                contact_message = serializer.save()
+                # Save the job application
+                job_application = serializer.save()
+                
+                # Send confirmation email
+                try:
+                    from django.core.mail import EmailMultiAlternatives
+                    from django.template.loader import render_to_string
+                    from django.utils.html import strip_tags
+                    from django.conf import settings
+                    import datetime
+                    
+                    job_title = job_application.job.title if job_application.job else "our company"
+                    
+                    # Prepare context for email template
+                    context = {
+                        'name': job_application.name,
+                        'job_title': job_title,
+                        'submitted_at': job_application.created_at.strftime('%B %d, %Y'),
+                        'resume_file': bool(job_application.resume_file),
+                        'resume_link': bool(job_application.resume_link),
+                        'current_year': datetime.datetime.now().year
+                    }
+                    
+                    # Render email templates
+                    html_content = render_to_string('emails/job_application_confirmation.html', context)
+                    text_content = render_to_string('emails/job_application_confirmation.txt', context)
+                    
+                    # Create email
+                    subject = f'Application Received for {job_title}'
+                    email = EmailMultiAlternatives(
+                        subject,
+                        text_content,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [job_application.email]
+                    )
+                    email.attach_alternative(html_content, "text/html")
+                    
+                    # Send email
+                    email.send()
+                    
+                    # Update application status
+                    job_application.email_sent = True
+                    job_application.save()
+                    
+                    # Log success
+                    logger.info(f"Confirmation email sent to {job_application.email} for job application {job_application.id}")
+                except Exception as e:
+                    logger.error(f"Error sending confirmation email: {str(e)}")
                 
                 # Log successful submission
-                logger.info(f"Contact message submitted: {contact_message.id} from {contact_message.email}")
+                logger.info(f"Job application submitted: {job_application.id} from {job_application.email} for job {job_application.job.id if job_application.job else 'Unknown'}")
                 
                 return Response(
                     {
                         'status': 'success',
-                        'message': 'Your message has been sent successfully. We will get back to you soon!',
+                        'message': 'Your application has been submitted successfully. We will review it and get back to you soon!',
                         'data': {
-                            'id': contact_message.id,
-                            'submitted_at': contact_message.created_at.isoformat()
+                            'id': job_application.id,
+                            'job_title': job_application.job.title if job_application.job else "Unknown Job",
+                            'submitted_at': job_application.created_at.isoformat()
+                        }
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Please check your input and try again.',
+                        'errors': serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        except Exception as e:
+            logger.error(f"Error processing job application: {str(e)}")
+            return Response(
+                {
+                    'status': 'error',
+                    'message': 'An error occurred while processing your application. Please try again later.'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@parser_classes([MultiPartParser, FormParser])
+def resume_submission(request):
+    """
+    API endpoint for submitting resumes with file upload support.
+    
+    Features:
+    - File upload handling (PDF, DOC, DOCX)
+    - Alternative link submission option
+    - Input validation and sanitization
+    - Rate limiting to prevent spam
+    - Comprehensive error handling
+    """
+    if request.method == 'POST':
+        try:
+            # Apply rate limiting
+            throttle = ContactRateThrottle()
+            if not throttle.allow_request(request, None):
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Too many submissions. Please try again later.',
+                        'retry_after': throttle.wait()
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+            
+            # Handle form data with potential file upload
+            serializer = ResumeSubmissionSerializer(data=request.data)
+            if serializer.is_valid():
+                # Save the resume submission
+                resume_submission = serializer.save()
+                
+                # Log successful submission
+                logger.info(f"Resume submitted: {resume_submission.id} from {resume_submission.email}")
+                
+                return Response(
+                    {
+                        'status': 'success',
+                        'message': 'Your resume has been submitted successfully. Our team will review it and get back to you soon!',
+                        'data': {
+                            'id': resume_submission.id,
+                            'submitted_at': resume_submission.created_at.isoformat()
                         }
                     },
                     status=status.HTTP_201_CREATED
@@ -1032,11 +1155,11 @@ def contact_message(request):
                 )
         
         except Exception as e:
-            logger.error(f"Error processing contact message: {str(e)}")
+            logger.error(f"Error processing resume submission: {str(e)}")
             return Response(
                 {
                     'status': 'error',
-                    'message': 'An error occurred while processing your message. Please try again later.'
+                    'message': 'An error occurred while processing your submission. Please try again later.'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

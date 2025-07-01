@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Service, TeamMember, JobPosting, ContactMessage
+from .models import Service, TeamMember, JobPosting, ContactMessage, ResumeSubmission, JobApplication
 
 
 class ServiceSerializer(serializers.ModelSerializer):
@@ -228,6 +228,136 @@ class ContactMessageSerializer(serializers.ModelSerializer):
         # - Spam detection
         # - Email notifications
         # - Integration with CRM systems
+        return super().create(validated_data)
+
+class ResumeSubmissionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ResumeSubmission model with validation and file handling.
+    """
+    resume_file = serializers.FileField(required=False, allow_null=True)
+    resume_link = serializers.URLField(required=False, allow_null=True)
+    
+    class Meta:
+        model = ResumeSubmission
+        fields = ['id', 'name', 'email', 'phone', 'message', 'resume_file', 'resume_link', 'created_at', 'status']
+        read_only_fields = ['id', 'created_at', 'status', 'is_reviewed']
+    
+    def validate_name(self, value):
+        """
+        Validate and sanitize name field.
+        """
+        if len(value.strip()) < 2:
+            raise serializers.ValidationError("Name must be at least 2 characters long.")
+        return value.strip().title()
+    
+    def validate_email(self, value):
+        """
+        Additional email validation.
+        """
+        if not value or '@' not in value:
+            raise serializers.ValidationError("Please provide a valid email address.")
+        return value.lower().strip()
+    
+    def validate_message(self, value):
+        """
+        Validate message field.
+        """
+        if len(value.strip()) < 10:
+            raise serializers.ValidationError("Message must be at least 10 characters long.")
+        return value.strip()
+    
+    def validate(self, data):
+        """
+        Validate that either resume_file or resume_link is provided.
+        """
+        if not data.get('resume_file') and not data.get('resume_link'):
+            raise serializers.ValidationError("Either a resume file or a link to a resume must be provided.")
+        return data
+    
+    def create(self, validated_data):
+        """
+        Create resume submission with additional processing.
+        """
+        return super().create(validated_data)
+
+
+class JobApplicationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for JobApplication model with validation and file handling.
+    """
+    resume_file = serializers.FileField(required=False, allow_null=True)
+    resume_link = serializers.URLField(required=False, allow_null=True)
+    job_id = serializers.IntegerField(write_only=True)
+    job_title = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = JobApplication
+        fields = ['id', 'job_id', 'job_title', 'name', 'email', 'phone', 'cover_letter', 
+                 'resume_file', 'resume_link', 'created_at', 'status', 'email_sent']
+        read_only_fields = ['id', 'created_at', 'status', 'is_reviewed', 'email_sent']
+    
+    def get_job_title(self, obj):
+        return obj.job.title if obj.job else "Unknown Job"
+    
+    def validate_name(self, value):
+        """
+        Validate and sanitize name field.
+        """
+        if len(value.strip()) < 2:
+            raise serializers.ValidationError("Name must be at least 2 characters long.")
+        return value.strip().title()
+    
+    def validate_email(self, value):
+        """
+        Additional email validation.
+        """
+        if not value or '@' not in value:
+            raise serializers.ValidationError("Please provide a valid email address.")
+        return value.lower().strip()
+    
+    def validate_cover_letter(self, value):
+        """
+        Validate cover letter field.
+        """
+        if len(value.strip()) < 10:
+            raise serializers.ValidationError("Cover letter must be at least 10 characters long.")
+        return value.strip()
+    
+    def validate_job_id(self, value):
+        """
+        Validate that the job exists and is active.
+        """
+        try:
+            job = JobPosting.objects.get(id=value, is_active=True)
+            return value
+        except JobPosting.DoesNotExist:
+            raise serializers.ValidationError("The job you are applying for does not exist or is no longer active.")
+    
+    def validate(self, data):
+        """
+        Validate that either resume_file or resume_link is provided.
+        """
+        if not data.get('resume_file') and not data.get('resume_link'):
+            raise serializers.ValidationError("Either a resume file or a link to a resume must be provided.")
+        return data
+    
+    def create(self, validated_data):
+        """
+        Create job application with additional processing.
+        """
+        job_id = validated_data.pop('job_id')
+        try:
+            job = JobPosting.objects.get(id=job_id)
+            validated_data['job'] = job
+        except JobPosting.DoesNotExist:
+            raise serializers.ValidationError({"job_id": "Job posting does not exist"})
+            
+        return super().create(validated_data)
+        # Set initial status
+        validated_data['status'] = 'new'
+        validated_data['is_reviewed'] = False
+        
+        # Create the resume submission
         return super().create(validated_data)
 
 

@@ -25,7 +25,9 @@ urlpatterns = [
     path('api/', include(router.urls)),
     
     # Enhanced API endpoints for modern frontend integration
-    path('api/contact/', api_views.contact_message, name='api_contact'),
+    path('api/contact/', api_views.job_application, name='api_contact'),
+    path('api/contact/resume/', api_views.resume_submission, name='api_resume'),
+    path('api/jobs/apply/', api_views.job_application, name='api_job_application'),
     path('api/health/', api_views.health_check, name='api_health'),
     path('api/homepage/', api_views.homepage_data, name='api_homepage'),
     

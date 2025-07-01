@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 // Flag to determine if we should use mock data
-const USE_MOCK_DATA = true; // Set to true to use mock data, false to use real API
+const USE_MOCK_DATA = false; // Set to true to use mock data, false to use real API
 
 // Add CSRF token for Django
 const getCsrfToken = (): string | null => {
@@ -514,6 +514,82 @@ export const apiService = {
       return { 
         success: false, 
         message: error.response?.data?.message || 'Failed to send message. Please try again.' 
+      };
+    }
+  },
+
+  // Resume submission - for career applications
+  submitResumeForm: async (data: FormData): Promise<{ success: boolean; message?: string }> => {
+    if (USE_MOCK_DATA) {
+      try {
+        // Mock successful submission
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+        return { success: true, message: 'Resume submitted successfully!' };
+      } catch (error) {
+        return { success: false, message: 'Failed to submit resume' };
+      }
+    }
+    try {
+      // Use different content type for FormData
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      const response = await api.post('/api/contact/resume/', data, config);
+      return { success: true, message: response.data.message || 'Resume submitted successfully!' };
+    } catch (error: any) {
+      console.error('Error submitting resume:', error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to submit resume. Please try again.' 
+      };
+    }
+  },
+
+  // Job application submission
+  submitJobApplication: async (data: FormData): Promise<{ 
+    success: boolean; 
+    message?: string; 
+    data?: { id: number; job_title: string; submitted_at: string };
+    errors?: any;
+  }> => {
+    if (USE_MOCK_DATA) {
+      try {
+        // Mock successful submission
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+        return { 
+          success: true, 
+          message: 'Your application has been submitted successfully. We will review it and get back to you soon!',
+          data: {
+            id: 123,
+            job_title: 'Mock Job Position',
+            submitted_at: new Date().toISOString()
+          }
+        };
+      } catch (error) {
+        return { success: false, message: 'Failed to submit application' };
+      }
+    }
+    try {
+      // Use different content type for FormData
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      const response = await api.post('/api/jobs/apply/', data, config);
+      return { 
+        success: response.data.status === 'success', 
+        message: response.data.message,
+        data: response.data.data
+      };
+    } catch (error: any) {
+      console.error('Error submitting job application:', error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to submit application. Please try again.',
+        errors: error.response?.data?.errors
       };
     }
   },

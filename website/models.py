@@ -45,6 +45,15 @@ class JobPosting(models.Model):
     description = models.TextField()
     requirements = models.TextField()
     is_active = models.BooleanField(default=True)
+    job_type = models.CharField(max_length=50, blank=True, choices=[
+        ('full-time', 'Full Time'),
+        ('part-time', 'Part Time'),
+        ('contract', 'Contract'),
+        ('internship', 'Internship'),
+        ('remote', 'Remote')
+    ])
+    salary_range = models.CharField(max_length=100, blank=True)
+    experience_level = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -55,6 +64,11 @@ class JobPosting(models.Model):
 
     def __str__(self):
         return self.title
+        
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Job Posting"
+        verbose_name_plural = "Job Postings"
 
 class TeamMember(models.Model):
     """
@@ -133,3 +147,120 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.subject}"
+
+class ResumeSubmission(models.Model):
+    """Model for storing resume submissions from career applicants."""
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    message = models.TextField()
+    resume_file = models.FileField(
+        upload_to='resumes/', 
+        blank=True, 
+        null=True,
+        storage=SecureFileStorage(),
+        validators=[
+            FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), 
+            validate_file_size
+        ],
+        help_text='Resume file (max 5MB, PDF or Word document)'
+    )
+    resume_link = models.URLField(blank=True, null=True, help_text="Link to resume on Google Drive or similar")
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('new', 'New Submission'),
+            ('reviewing', 'Under Review'),
+            ('contacted', 'Contacted'),
+            ('interview', 'Interview Scheduled'),
+            ('rejected', 'Not Selected'),
+            ('hired', 'Hired')
+        ],
+        default='new'
+    )
+    notes = models.TextField(blank=True, help_text="Internal notes about this application")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Resume Submission"
+        verbose_name_plural = "Resume Submissions"
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['is_reviewed']),
+            models.Index(fields=['email']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.created_at.strftime('%Y-%m-%d')}"
+
+    def clean(self):
+        """Ensure that either resume_file or resume_link is provided."""
+        if not self.resume_file and not self.resume_link:
+            raise ValidationError("Either a resume file or a link to a resume must be provided.")
+        return super().clean()
+
+
+class JobApplication(models.Model):
+    """Model for storing job applications for specific job postings."""
+    job = models.ForeignKey(
+        JobPosting, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='applications',
+        help_text="The job posting this application is for"
+    )
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    cover_letter = models.TextField(help_text="Cover letter or additional information")
+    resume_file = models.FileField(
+        upload_to='job_applications/', 
+        blank=True, 
+        null=True,
+        storage=SecureFileStorage(),
+        validators=[
+            FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), 
+            validate_file_size
+        ],
+        help_text='Resume file (max 5MB, PDF or Word document)'
+    )
+    resume_link = models.URLField(blank=True, null=True, help_text="Link to resume on Google Drive or similar")
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('new', 'New Application'),
+            ('reviewing', 'Under Review'),
+            ('contacted', 'Contacted'),
+            ('interview', 'Interview Scheduled'),
+            ('rejected', 'Not Selected'),
+            ('hired', 'Hired')
+        ],
+        default='new'
+    )
+    notes = models.TextField(blank=True, help_text="Internal notes about this application")
+    email_sent = models.BooleanField(default=False, help_text="Whether confirmation email was sent")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Job Application"
+        verbose_name_plural = "Job Applications"
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['is_reviewed']),
+            models.Index(fields=['email']),
+            models.Index(fields=['job']),
+        ]
+
+    def __str__(self):
+        job_title = self.job.title if self.job else "Unknown Job"
+        return f"{self.name} - {job_title} - {self.created_at.strftime('%Y-%m-%d')}"
+
+    def clean(self):
+        """Ensure that either resume_file or resume_link is provided."""
+        if not self.resume_file and not self.resume_link:
+            raise ValidationError("Either a resume file or a link to a resume must be provided.")
+        return super().clean()

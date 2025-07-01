@@ -194,7 +194,8 @@
 /* Contact Content */
 .contact-content {
   padding: 6rem 0;
-  background: var(--light-bg);
+  background: var(--background);
+  transition: background var(--transition-theme);
 }
 
 .contact-grid {
@@ -206,11 +207,12 @@
 
 /* Contact Info */
 .contact-info {
-  background: white;
+  background: var(--card-background);
   border-radius: 1.5rem;
   padding: 2.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--primary-transparent);
+  transition: background var(--transition-theme), border-color var(--transition-theme), box-shadow var(--transition-theme);
 }
 
 .info-header h3 {
@@ -237,10 +239,10 @@
   align-items: center;
   gap: 1rem;
   padding: 1.5rem;
-  background: var(--light-bg);
+  background: var(--background-alt);
   border-radius: 1rem;
-  border: 1px solid #e5e7eb;
-  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease, background var(--transition-theme), border-color var(--transition-theme);
   position: relative;
   overflow: hidden;
 }
@@ -252,9 +254,9 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+  background: var(--primary-gradient-transparent);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, background var(--transition-theme);
 }
 
 .contact-method:hover::before {
@@ -267,13 +269,14 @@
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: var(--primary-gradient);
   border-radius: 0.75rem;
-  color: white;
+  color: var(--text-on-primary);
   font-size: 1.25rem;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
+  transition: background var(--transition-theme), color var(--transition-theme);
 }
 
 .contact-details {
@@ -286,13 +289,15 @@
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: #1f2937;
+  color: var(--text-color);
+  transition: color var(--transition-theme);
 }
 
 .contact-details p {
-  color: #6b7280;
+  color: var(--text-light);
   margin: 0;
   font-size: 0.875rem;
+  transition: color var(--transition-theme);
 }
 
 .contact-action {
@@ -349,15 +354,17 @@
 
 /* Social Links */
 .social-links {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   padding-top: 2rem;
+  transition: border-color var(--transition-theme);
 }
 
 .social-links h4 {
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #1f2937;
+  color: var(--text-color);
+  transition: color var(--transition-theme);
 }
 
 .social-icons {
@@ -371,26 +378,27 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  background: var(--light-bg);
-  color: #6b7280;
+  background: var(--background-alt);
+  color: var(--text-light);
   border-radius: 0.5rem;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease, background var(--transition-theme), color var(--transition-theme);
 }
 
 .social-link:hover {
   background: var(--primary-color);
-  color: white;
+  color: var(--text-on-primary);
   transform: translateY(-2px);
 }
 
 /* Contact Form */
 .contact-form-container {
-  background: white;
+  background: var(--card-background);
   border-radius: 1.5rem;
   padding: 2.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--primary-transparent);
+  transition: background var(--transition-theme), border-color var(--transition-theme), box-shadow var(--transition-theme);
 }
 
 .form-header {
@@ -401,12 +409,14 @@
   font-size: 1.875rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #1f2937;
+  color: var(--text-color);
+  transition: color var(--transition-theme);
 }
 
 .form-header p {
-  color: #6b7280;
+  color: var(--text-light);
   line-height: 1.6;
+  transition: color var(--transition-theme);
 }
 
 .contact-form {
@@ -435,19 +445,20 @@
 .form-group input,
 .form-group textarea {
   padding: 0.875rem 1rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-color);
   border-radius: 0.5rem;
   font-size: 1rem;
-  transition: all 0.3s ease;
-  background: #f9fafb;
+  transition: all 0.3s ease, border-color var(--transition-theme), background var(--transition-theme), color var(--transition-theme);
+  background: var(--input-background);
+  color: var(--text-color);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  background: white;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  background: var(--card-background);
+  box-shadow: 0 0 0 3px var(--primary-transparent);
 }
 
 .form-group input.error,
@@ -472,21 +483,24 @@
 }
 
 .alert-success {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background: var(--success-light);
+  color: var(--success-dark);
+  border: 1px solid var(--success-color);
+  transition: background var(--transition-theme), color var(--transition-theme), border-color var(--transition-theme);
 }
 
 .alert-error {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
+  background: var(--danger-light);
+  color: var(--danger-dark);
+  border: 1px solid var(--danger-color);
+  transition: background var(--transition-theme), color var(--transition-theme), border-color var(--transition-theme);
 }
 
 /* FAQ Section */
 .faq-section {
   padding: 6rem 0;
-  background: white;
+  background: var(--card-background);
+  transition: var(--transition-theme);
 }
 
 .faq-grid {
@@ -497,11 +511,11 @@
 }
 
 .faq-item {
-  background: #f8fafc;
+  background: var(--card-background);
   border-radius: 1rem;
   padding: 2rem;
-  border: 1px solid #e5e7eb;
-  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease, background var(--transition-theme), border-color var(--transition-theme);
   position: relative;
   overflow: hidden;
 }
@@ -513,9 +527,9 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+  background: var(--primary-gradient-transparent);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, background var(--transition-theme);
 }
 
 .faq-item:hover::before {
@@ -528,29 +542,32 @@
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: var(--primary-gradient);
   border-radius: 0.75rem;
-  color: white;
+  color: var(--text-on-primary);
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
   position: relative;
   z-index: 1;
+  transition: background var(--transition-theme), color var(--transition-theme);
 }
 
 .faq-item h4 {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #1f2937;
+  color: var(--text-color);
   position: relative;
   z-index: 1;
+  transition: color var(--transition-theme);
 }
 
 .faq-item p {
-  color: #6b7280;
+  color: var(--text-light);
   line-height: 1.6;
   position: relative;
   z-index: 1;
+  transition: color var(--transition-theme);
 }
 
 /* Loading Spinner */
@@ -564,10 +581,11 @@
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 3px solid #e5e7eb;
-  border-top: 3px solid #6366f1;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  transition: border-color var(--transition-theme);
 }
 
 @keyframes spin {
@@ -664,68 +682,6 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .contact-content {
-    background: #111827;
-  }
-  
-  .contact-info,
-  .contact-form-container {
-    background: #1f2937;
-    border-color: rgba(99, 102, 241, 0.2);
-  }
-  
-  .section-title,
-  .info-header h3,
-  .form-header h3,
-  .contact-details h4,
-  .social-links h4,
-  .faq-item h4 {
-    color: #f9fafb;
-  }
-  
-  .section-subtitle,
-  .info-header p,
-  .form-header p,
-  .contact-details p,
-  .faq-item p {
-    color: #d1d5db;
-  }
-  
-  .contact-method {
-    background: #374151;
-    border-color: #4b5563;
-  }
-  
-  .form-group input,
-  .form-group textarea {
-    background: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
-  }
-  
-  .form-group input:focus,
-  .form-group textarea:focus {
-    background: #4b5563;
-  }
-  
-  .form-group label {
-    color: #e5e7eb;
-  }
-  
-  .faq-item {
-    background: #374151;
-    border-color: #4b5563;
-  }
-  
-  .social-link {
-    background: #374151;
-    color: #d1d5db;
-  }
-  
-  .social-link:hover {
-    background: #6366f1;
-    color: white;
-  }
-}
+/* Note: Dark mode support is now handled through CSS variables */
+/* The dark mode styles are applied automatically when the theme is switched */
+/* This ensures consistent styling across the entire application */

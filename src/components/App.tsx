@@ -8,6 +8,7 @@ import About from '../pages/About';
 import Services from '../pages/Services';
 import Careers from '../pages/Careers';
 import Contact from '../pages/Contact';
+import JobDetail from './JobDetail';
 import ChatbotComponent from './ChatbotComponent';
 
 import '../styles/main.css';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
               <Route path="/services/*" element={<Services />} />
               <Route path="/about" element={<About />} />
               <Route path="/careers" element={<Careers />} />
+              <Route path="/careers/:id" element={<JobDetail />} />
               <Route path="/contact" element={<Contact />} />
             </Routes>
           </PageTransition>

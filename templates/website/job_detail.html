@@ -2,6 +2,94 @@
 
 {% block title %}{{ job.title }} - Careers at Azayd IT{% endblock %}
 
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function() {
+        const jobApplicationForm = document.getElementById('jobApplicationForm');
+        const fileInput = document.getElementById('resume_file');
+        const fileNameDisplay = document.getElementById('file-name');
+        const responseDiv = document.getElementById('application-response');
+        
+        // Display selected filename
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    fileNameDisplay.textContent = this.files[0].name;
+                    fileNameDisplay.classList.add('has-file');
+                } else {
+                    fileNameDisplay.textContent = '';
+                    fileNameDisplay.classList.remove('has-file');
+                }
+            });
+        }
+        
+        // Form submission
+        if (jobApplicationForm) {
+            jobApplicationForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                const submitBtn = jobApplicationForm.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.disabled = true;
+                
+                // Get CSRF token
+                const csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                // Create FormData object
+                const formData = new FormData(jobApplicationForm);
+                
+                // Submit form via AJAX
+                fetch('/api/jobs/apply/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Reset button
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                    
+                    // Handle response
+                    if (data.status === 'success') {
+                        responseDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                        jobApplicationForm.reset();
+                        fileNameDisplay.textContent = '';
+                        fileNameDisplay.classList.remove('has-file');
+                        
+                        // Scroll to response
+                        responseDiv.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        let errorMessage = data.message;
+                        
+                        // Format validation errors
+                        if (data.errors) {
+                            errorMessage += '<ul class="error-list">';
+                            for (const field in data.errors) {
+                                errorMessage += `<li>${field}: ${data.errors[field]}</li>`;
+                            }
+                            errorMessage += '</ul>';
+                        }
+                        
+                        responseDiv.innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                    responseDiv.innerHTML = `<div class="alert alert-danger">An error occurred while submitting your application. Please try again later.</div>`;
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <section class="job-detail-hero" data-aos="fade-up">
     <div class="container">
@@ -45,16 +133,68 @@
 
                 <div class="apply-section" data-aos="fade-up">
                     <h2>How to Apply</h2>
-                    <p>Ready to join our team? Send your resume and a brief cover letter to <a href="mailto:careers@azayd.com?subject=Application for {{ job.title }}">careers@azayd.com</a></p>
-                    <div class="apply-buttons">
-                        <a href="mailto:careers@azayd.com?subject=Application for {{ job.title }}" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i>
-                            Apply Now
-                        </a>
-                        <a href="{% url 'website:careers' %}" class="btn btn-outline">
-                            <i class="fas fa-arrow-left"></i>
-                            View All Jobs
-                        </a>
+                    <p>Ready to join our team? Fill out the application form below or send your resume to <a href="mailto:careers@azayd.com?subject=Application for {{ job.title }}">careers@azayd.com</a></p>
+                    
+                    <div class="job-application-form">
+                        <form id="jobApplicationForm" enctype="multipart/form-data">
+                            <input type="hidden" name="job_id" value="{{ job.id }}">
+                            <input type="hidden" name="job_title" value="{{ job.title }}">
+                            
+                            <div class="form-group">
+                                <label for="name">Full Name *</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="cover_letter">Cover Letter</label>
+                                <textarea id="cover_letter" name="cover_letter" rows="4"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Resume *</label>
+                                <div class="resume-options">
+                                    <div class="resume-upload">
+                                        <label for="resume_file" class="file-label">
+                                            <i class="fas fa-upload"></i>
+                                            <span>Upload Resume (PDF, DOC, DOCX)</span>
+                                        </label>
+                                        <input type="file" id="resume_file" name="resume_file" accept=".pdf,.doc,.docx" class="file-input">
+                                        <div id="file-name" class="file-name"></div>
+                                    </div>
+                                    
+                                    <div class="resume-divider">OR</div>
+                                    
+                                    <div class="resume-link">
+                                        <label for="resume_link">Provide a link to your resume</label>
+                                        <input type="url" id="resume_link" name="resume_link" placeholder="https://">
+                                    </div>
+                                </div>
+                                <div class="form-hint">Please provide either a file upload or a link to your resume</div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Submit Application
+                                </button>
+                                <a href="{% url 'website:careers' %}" class="btn btn-outline">
+                                    <i class="fas fa-arrow-left"></i>
+                                    View All Jobs
+                                </a>
+                            </div>
+                            
+                            <div id="application-response" class="application-response"></div>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,20 @@
+Dear {{ name }},
+
+Thank you for applying for the {{ job_title }} position at Azayd IT. We have received your application and our team will review it shortly.
+
+Application Details:
+- Position: {{ job_title }}
+- Submitted on: {{ submitted_at }}
+{% if resume_file %}- Resume: Attached{% elif resume_link %}- Resume: Linked{% endif %}
+
+What happens next?
+* Our hiring team will review your application
+* If your qualifications match our requirements, we'll contact you for an interview
+* The entire process typically takes 1-2 weeks
+
+If you have any questions about your application or the hiring process, please don't hesitate to contact us at careers@azayd.com.
+
+View More Opportunities: https://www.azayd.com/careers
+
+© {{ current_year }} Azayd IT. All rights reserved.
+This is an automated email, please do not reply to this message.
