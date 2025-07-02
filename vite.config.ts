@@ -45,19 +45,19 @@ export default defineConfig({
     proxy: {
       // Proxy API requests to Django backend
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
       // Proxy media requests to Django backend
       '/media': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
       // Proxy admin requests to Django backend
       '/admin': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },

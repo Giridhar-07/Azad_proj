@@ -3,7 +3,7 @@ import { mockApiService } from './mockApiService';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000',
+  baseURL: process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json'
   }
