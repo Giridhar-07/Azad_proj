@@ -17,7 +17,7 @@ interface GeminiResponse {
 }
 
 export class OpenRouterAPI {
-  private static API_KEY = 'AIzaSyC9kTuY3qG7TO1KqFlLQIPe8b2VGvuY6k0';
+  private static API_KEY = 'Your API key';
   private static API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
   private static MODEL = 'gemini-1.5-flash-latest';
   private static SITE_URL = window.location.origin;
