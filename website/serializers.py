@@ -352,12 +352,11 @@ class JobApplicationSerializer(serializers.ModelSerializer):
         except JobPosting.DoesNotExist:
             raise serializers.ValidationError({"job_id": "Job posting does not exist"})
             
-        return super().create(validated_data)
         # Set initial status
         validated_data['status'] = 'new'
         validated_data['is_reviewed'] = False
         
-        # Create the resume submission
+        # Create the job application
         return super().create(validated_data)
 
 

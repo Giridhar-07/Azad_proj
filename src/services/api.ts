@@ -14,11 +14,19 @@ const USE_MOCK_DATA = false; // Set to true to use mock data, false to use real 
 
 // Add CSRF token for Django
 const getCsrfToken = (): string | null => {
+  // First try to get from cookie
   const cookieValue = document.cookie
     .split('; ')
     .find(row => row.startsWith('csrftoken='))
     ?.split('=')[1];
-  return cookieValue || null;
+  
+  if (cookieValue) {
+    return cookieValue;
+  }
+  
+  // Fallback to meta tag
+  const metaTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+  return metaTag ? metaTag.getAttribute('content') : null;
 };
 
 // Request interceptor to add CSRF token
@@ -475,7 +483,7 @@ export const apiService = {
       return mockApiService.getJobPostings();
     }
     try {
-      const response = await axios.get('/api/jobs/', { params });
+      const response = await api.get('/api/jobs/', { params });
       return response.data.results || response.data;
     } catch (error) {
       console.error('Error fetching job postings:', error);
@@ -488,7 +496,7 @@ export const apiService = {
       return mockApiService.getJobPosting(id);
     }
     try {
-      const response = await axios.get(`/api/jobs/${id}/`);
+      const response = await api.get(`/api/jobs/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching job posting ${id}:`, error);
@@ -530,10 +538,16 @@ export const apiService = {
       }
     }
     try {
-      // Use different content type for FormData
+      // Get CSRF token and add it to FormData if not already present
+      const csrfToken = getCsrfToken();
+      if (csrfToken && !data.has('csrfmiddlewaretoken')) {
+        data.append('csrfmiddlewaretoken', csrfToken);
+      }
+      
+      // For FormData, let the browser set the Content-Type with boundary
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'X-CSRFToken': csrfToken || ''
         }
       };
       const response = await api.post('/api/contact/resume/', data, config);
@@ -572,10 +586,16 @@ export const apiService = {
       }
     }
     try {
-      // Use different content type for FormData
+      // Get CSRF token and add it to FormData if not already present
+      const csrfToken = getCsrfToken();
+      if (csrfToken && !data.has('csrfmiddlewaretoken')) {
+        data.append('csrfmiddlewaretoken', csrfToken);
+      }
+      
+      // For FormData, let the browser set the Content-Type with boundary
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'X-CSRFToken': csrfToken || ''
         }
       };
       const response = await api.post('/api/jobs/apply/', data, config);

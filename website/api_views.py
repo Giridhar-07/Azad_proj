@@ -73,6 +73,7 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
     - Modern REST API standards compliance
     """
     serializer_class = ServiceSerializer
+    permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description', 'tech_stack', 'short_description']
@@ -368,6 +369,72 @@ def featured_services(request):
         )
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def contact_submission(request):
+    """
+    API endpoint for contact form submissions.
+    
+    Features:
+    - Input validation and sanitization
+    - Rate limiting to prevent spam
+    - Comprehensive error handling
+    """
+    if request.method == 'POST':
+        try:
+            # Apply rate limiting
+            throttle = ContactRateThrottle()
+            if not throttle.allow_request(request, None):
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Too many submissions. Please try again later.',
+                        'retry_after': throttle.wait()
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+            
+            # Handle form data
+            serializer = ContactMessageSerializer(data=request.data)
+            if serializer.is_valid():
+                # Save the contact message
+                contact_message = serializer.save()
+                
+                # Log successful submission
+                logger.info(f"Contact message submitted: {contact_message.id} from {contact_message.email}")
+                
+                return Response(
+                    {
+                        'status': 'success',
+                        'message': 'Your message has been sent successfully. We will get back to you soon!',
+                        'data': {
+                            'id': contact_message.id,
+                            'submitted_at': contact_message.created_at.isoformat()
+                        }
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Please check your input and try again.',
+                        'errors': serializer.errors
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        except Exception as e:
+            logger.error(f"Error processing contact submission: {str(e)}")
+            return Response(
+                {
+                    'status': 'error',
+                    'message': 'An error occurred while processing your message. Please try again later.'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 # Additional API endpoints for enhanced functionality
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -582,6 +649,7 @@ class TeamMemberViewSet(viewsets.ReadOnlyModelViewSet):
     - Modern REST API standards compliance
     """
     serializer_class = TeamMemberSerializer
+    permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'position', 'bio']
@@ -897,6 +965,7 @@ class JobPostingViewSet(viewsets.ReadOnlyModelViewSet):
     - Ordered by creation date (newest first)
     """
     serializer_class = JobPostingSerializer
+    permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description', 'requirements', 'department']
