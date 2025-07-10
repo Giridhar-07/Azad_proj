@@ -138,13 +138,18 @@ Breakpoints:
 
 ### Environment Variables
 
-Create `.env.local` for development:
+Create a `.env` file for development based on the `.env.example` template:
 ```env
+# API Keys
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_HUGGINGFACE_API_KEY=your_huggingface_api_key_here
+
+# Other configuration
 VITE_APP_TITLE=Azad Project
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8080
 ```
 
-Production variables are in `.env.production`
+> **Important**: Never commit your `.env` file with real API keys to version control. The `.env` file is already included in `.gitignore`.
 
 ### Vite Configuration
 

@@ -577,9 +577,23 @@ export const apiService = {
     }
     try {
       const response = await api.get(`/api/jobs/${id}/`);
+      
+      // Check if response data is valid JSON
+      if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
+        console.error('Received HTML instead of JSON data');
+        throw new Error('Invalid response format: received HTML instead of JSON');
+      }
+      
+      // Validate that response.data has the expected structure
+      if (!response.data || typeof response.data !== 'object') {
+        console.error('Invalid job posting data format:', response.data);
+        throw new Error('Invalid job posting data format');
+      }
+      
       return response.data;
     } catch (error) {
       console.error(`Error fetching job posting ${id}:`, error);
+      // Fallback to mock data
       return mockApiService.getJobPosting(id);
     }
   },
@@ -676,9 +690,19 @@ export const apiService = {
       const config = {
         headers: {
           'X-CSRFToken': csrfToken || ''
-        }
+        },
+        // Increase timeout for file uploads
+        timeout: 30000 // 30 seconds
       };
+      
       const response = await api.post('/api/jobs/apply/', data, config);
+      
+      // Check if response data is valid JSON
+      if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
+        console.error('Received HTML instead of JSON data');
+        throw new Error('Invalid response format: received HTML instead of JSON');
+      }
+      
       return { 
         success: response.data.status === 'success', 
         message: response.data.message,
@@ -686,6 +710,25 @@ export const apiService = {
       };
     } catch (error: any) {
       console.error('Error submitting job application:', error);
+      
+      // Network errors
+      if (error.code === 'ERR_NETWORK') {
+        return {
+          success: false,
+          message: 'Network error. Please check your internet connection and try again.',
+          errors: { _error: 'Network error' }
+        };
+      }
+      
+      // Timeout errors
+      if (error.code === 'ECONNABORTED') {
+        return {
+          success: false,
+          message: 'Request timed out. The server might be busy, please try again later.',
+          errors: { _error: 'Request timeout' }
+        };
+      }
+      
       return { 
         success: false, 
         message: error.response?.data?.message || 'Failed to submit application. Please try again.',
