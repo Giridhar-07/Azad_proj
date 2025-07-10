@@ -3,11 +3,14 @@ import { mockApiService } from './mockApiService';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8080',
+  baseURL: process.env.NODE_ENV === 'production' ? '' : 'http://127.0.0.1:8080',
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// Add timeout and better error handling
+api.defaults.timeout = 10000; // 10 seconds timeout
 
 // Flag to determine if we should use mock data
 const USE_MOCK_DATA = false; // Set to true to use mock data, false to use real API
@@ -45,7 +48,16 @@ api.interceptors.request.use(
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Check if response data is HTML when expecting JSON
+    if (response.config.headers['Content-Type'] === 'application/json' && 
+        typeof response.data === 'string' && 
+        response.data.trim().startsWith('<!DOCTYPE html>')) {
+      console.error('Received HTML instead of JSON data');
+      return Promise.reject(new Error('Invalid response format: received HTML instead of JSON'));
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 403) {
       console.error('CSRF token missing or invalid');
@@ -150,7 +162,21 @@ export const apiService = {
        }
        
        const response = await api.get('/api/services/featured/');
-       return response.data.services || response.data;
+       
+       // Check if response data is valid JSON
+       if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
+         console.error('Received HTML instead of JSON data');
+         throw new Error('Invalid response format: received HTML instead of JSON');
+       }
+       
+       // Validate that response.data has the expected structure
+       const data = response.data.services || response.data;
+       if (!data || !Array.isArray(data)) {
+         console.error('Invalid featured services data format:', response.data);
+         throw new Error('Invalid featured services data format');
+       }
+       
+       return data;
      } catch (error) {
        console.error('Error fetching featured services:', error);
        const services = await mockApiService.getServices();
@@ -167,7 +193,21 @@ export const apiService = {
        }
        
        const response = await api.get('/api/team/highlights/');
-       return response.data.team_members || response.data;
+       
+       // Check if response data is valid JSON
+       if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
+         console.error('Received HTML instead of JSON data');
+         throw new Error('Invalid response format: received HTML instead of JSON');
+       }
+       
+       // Validate that response.data has the expected structure
+       const data = response.data.team_members || response.data;
+       if (!data || !Array.isArray(data)) {
+         console.error('Invalid team highlights data format:', response.data);
+         throw new Error('Invalid team highlights data format');
+       }
+       
+       return data;
      } catch (error) {
        console.error('Error fetching team highlights:', error);
        const members = await mockApiService.getTeamMembers();
@@ -206,6 +246,19 @@ export const apiService = {
     }
     try {
       const response = await api.get('/api/services/', { params });
+      
+      // Check if response data is valid JSON
+      if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
+        console.error('Received HTML instead of JSON data');
+        throw new Error('Invalid response format: received HTML instead of JSON');
+      }
+      
+      // Validate that response.data has the expected structure
+      if (!response.data || (!Array.isArray(response.data) && !Array.isArray(response.data.results))) {
+        console.error('Invalid services data format:', response.data);
+        throw new Error('Invalid services data format');
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -314,6 +367,19 @@ export const apiService = {
     }
     try {
       const response = await api.get('/api/team/', { params });
+      
+      // Check if response data is valid JSON
+      if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
+        console.error('Received HTML instead of JSON data');
+        throw new Error('Invalid response format: received HTML instead of JSON');
+      }
+      
+      // Validate that response.data has the expected structure
+      if (!response.data || !response.data.results || !Array.isArray(response.data.results)) {
+        console.error('Invalid team members data format:', response.data);
+        throw new Error('Invalid team members data format');
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching team members:', error);
@@ -484,7 +550,21 @@ export const apiService = {
     }
     try {
       const response = await api.get('/api/jobs/', { params });
-      return response.data.results || response.data;
+      
+      // Check if response data is valid JSON
+      if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
+        console.error('Received HTML instead of JSON data');
+        throw new Error('Invalid response format: received HTML instead of JSON');
+      }
+      
+      // Validate that response.data has the expected structure
+      const data = response.data.results || response.data;
+      if (!data || !Array.isArray(data)) {
+        console.error('Invalid job postings data format:', response.data);
+        throw new Error('Invalid job postings data format');
+      }
+      
+      return data;
     } catch (error) {
       console.error('Error fetching job postings:', error);
       return mockApiService.getJobPostings();

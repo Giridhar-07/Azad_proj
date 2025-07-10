@@ -520,11 +520,27 @@ const Services: React.FC = () => {
         if (cachedServices && cacheTimestamp) {
           const isExpired = Date.now() - parseInt(cacheTimestamp) > cacheExpiry;
           if (!isExpired) {
-            const parsedData = JSON.parse(cachedServices);
-            setServices(parsedData.results || parsedData);
-            setHasMore(!!parsedData.next);
-            setLoading(false);
-            return;
+            try {
+              const parsedData = JSON.parse(cachedServices);
+              const cachedServicesData = parsedData.results || parsedData;
+              
+              // Ensure cached data is an array
+              if (Array.isArray(cachedServicesData)) {
+                setServices(cachedServicesData);
+                setHasMore(!!parsedData.next);
+                setLoading(false);
+                console.log('✅ Loaded', cachedServicesData.length, 'services from cache');
+                return;
+              } else {
+                console.warn('Cached services data is not an array, fetching fresh data');
+                localStorage.removeItem(cacheKey);
+                localStorage.removeItem(`${cacheKey}_timestamp`);
+              }
+            } catch (parseError) {
+              console.error('Error parsing cached services:', parseError);
+              localStorage.removeItem(cacheKey);
+              localStorage.removeItem(`${cacheKey}_timestamp`);
+            }
           }
         }
       }
@@ -572,7 +588,15 @@ const Services: React.FC = () => {
     async function fetchFreshData(apiParams: any) {
       const response = await apiService.getServices(apiParams);
       const data = response.results || response;
-      console.log('✅ Fetched fresh services data:', data.length, 'services');
+      console.log('✅ Fetched fresh services data:', response);
+      
+      // Ensure data is an array before mapping
+      if (!Array.isArray(data)) {
+        console.error('Services data is not an array:', data);
+        throw new Error('Invalid services data format');
+      }
+      
+      console.log('✅ Processing', data.length, 'services');
       
       // Enhanced mapping with better error handling
       const mappedServices = data.map(service => {
