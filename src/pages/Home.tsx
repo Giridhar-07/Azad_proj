@@ -911,7 +911,7 @@ const Home: React.FC = () => {
             >
               <div className="contact-item">
                 <span className="contact-icon">📧</span>
-                <span className="contact-text">hello@azayd.com</span>
+                <span className="contact-text">azayd8752@gmail.com</span>
               </div>
               <div className="contact-item">
                 <span className="contact-icon">📞</span>

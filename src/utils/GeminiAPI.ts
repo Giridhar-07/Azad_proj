@@ -188,7 +188,7 @@ export class GeminiAPI {
 **Company Overview:**
 - Name: Azayd IT Consulting
 - Location: MG Road, Bengaluru, India
-- Contact: contact@azayd.com, +91 XXXXXXXXXX
+- Contact: azayd8752@gmail.com, +91 XXXXXXXXXX
 - Website: ${this.SITE_URL}
 
 **Our Services:**

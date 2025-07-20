@@ -22,7 +22,7 @@ export const localResponses: Response[] = [
   },
   {
     keywords: ['contact', 'reach', 'email', 'phone', 'get in touch', 'call'],
-    response: "📧 **Email**: contact@azayd.com\n📞 **Phone**: +91 XXXXXXXXXX\n📍 **Office**: MG Road, Bengaluru, India\n\nWe serve clients globally through our remote services. Would you like me to help you schedule a consultation or connect you with our team?",
+    response: "📧 **Email**: azayd8752@gmail.com\n📞 **Phone**: +91 XXXXXXXXXX\n📍 **Office**: MG Road, Bengaluru, India\n\nWe serve clients globally through our remote services. Would you like me to help you schedule a consultation or connect you with our team?",
     routes: [
       { text: "Contact us", path: "/contact" }
     ]
@@ -77,7 +77,7 @@ export const localResponses: Response[] = [
   },
   {
     keywords: ['consultation', 'meeting', 'discuss', 'schedule', 'appointment'],
-    response: "📅 **Schedule a Consultation:**\n\nI'd be happy to help you connect with our experts! You can:\n\n🔹 **Email us**: contact@azayd.com\n🔹 **Visit our Contact page** for the consultation form\n🔹 **Call directly**: +91 XXXXXXXXXX\n\nOur consultations are free and we'll discuss your specific requirements, timeline, and how we can help achieve your goals.",
+    response: "📅 **Schedule a Consultation:**\n\nI'd be happy to help you connect with our experts! You can:\n\n🔹 **Email us**: azayd8752@gmail.com\n🔹 **Visit our Contact page** for the consultation form\n🔹 **Call directly**: +91 XXXXXXXXXX\n\nOur consultations are free and we'll discuss your specific requirements, timeline, and how we can help achieve your goals.",
     routes: [
       { text: "Schedule a consultation", path: "/contact" }
     ]

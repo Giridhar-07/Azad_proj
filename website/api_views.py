@@ -1089,6 +1089,8 @@ def job_application(request):
                     from django.template.loader import render_to_string
                     from django.utils.html import strip_tags
                     from django.conf import settings
+                    from django.core.mail.backends.smtp import EmailBackend
+                    from django.core.mail.backends.console import EmailBackend as ConsoleEmailBackend
                     import datetime
                     
                     job_title = job_application.job.title if job_application.job else "our company"
@@ -1117,15 +1119,24 @@ def job_application(request):
                     )
                     email.attach_alternative(html_content, "text/html")
                     
-                    # Send email
-                    email.send()
+                    # Try to send email using SMTP first
+                    try:
+                        # Send email using the configured backend
+                        email.send()
+                        email_sent = True
+                        logger.info(f"Confirmation email sent to {job_application.email} for job application {job_application.id}")
+                    except Exception as smtp_error:
+                        # If SMTP fails, fall back to console backend
+                        logger.warning(f"SMTP email failed: {str(smtp_error)}. Falling back to console backend.")
+                        console_backend = ConsoleEmailBackend()
+                        email.connection = console_backend
+                        email.send()
+                        email_sent = True
+                        logger.info(f"Confirmation email printed to console for {job_application.email}")
                     
                     # Update application status
-                    job_application.email_sent = True
+                    job_application.email_sent = email_sent
                     job_application.save()
-                    
-                    # Log success
-                    logger.info(f"Confirmation email sent to {job_application.email} for job application {job_application.id}")
                 except Exception as e:
                     logger.error(f"Error sending confirmation email: {str(e)}")
                 

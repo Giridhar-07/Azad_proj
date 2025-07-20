@@ -93,7 +93,7 @@ export class Chatbot {
     const message = userMessage.toLowerCase();
     
     if (message.includes('help') || message.includes('support')) {
-      return "I'm here to help! While I'm having trouble with my AI service, I can still assist you with information about Azayd IT Consulting. Try asking about our services, contact information, or pricing. For complex queries, please contact us directly at contact@azayd.com.";
+      return "I'm here to help! While I'm having trouble with my AI service, I can still assist you with information about Azayd IT Consulting. Try asking about our services, contact information, or pricing. For complex queries, please contact us directly at azayd8752@gmail.com.";
     }
     
     if (message.includes('service') || message.includes('what') || message.includes('do')) {
@@ -101,10 +101,10 @@ export class Chatbot {
     }
     
     if (message.includes('contact') || message.includes('reach')) {
-      return "You can reach us at:\n\n📧 Email: contact@azayd.com\n📞 Phone: +91 XXXXXXXXXX\n📍 Office: MG Road, Bengaluru\n\nWe're here to help with all your IT consulting needs!";
+      return "You can reach us at:\n\n📧 Email: azayd8752@gmail.com\n📞 Phone: +91 XXXXXXXXXX\n📍 Office: MG Road, Bengaluru\n\nWe're here to help with all your IT consulting needs!";
     }
     
-    return "Thank you for your question! While I'm having trouble with my AI service right now, I'd be happy to connect you with our team who can provide detailed answers. Please contact us at contact@azayd.com or call +91 XXXXXXXXXX for immediate assistance.";
+    return "Thank you for your question! While I'm having trouble with my AI service right now, I'd be happy to connect you with our team who can provide detailed answers. Please contact us at azayd8752@gmail.com or call +91 XXXXXXXXXX for immediate assistance.";
   }
 
   private async simulateStreamingResponse(response: string): Promise<string> {

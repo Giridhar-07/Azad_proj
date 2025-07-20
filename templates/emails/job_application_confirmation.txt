@@ -14,7 +14,7 @@ What happens next?
 
 If you have any questions about your application or the hiring process, please don't hesitate to contact us at azayd8752@gmail.com.
 
-View More Opportunities: https://www.azayd.com/careers
+View More Opportunities: http://localhost:8000/careers
 
 © {{ current_year }} Azayd IT. All rights reserved.
 This is an automated email, please do not reply to this message.
