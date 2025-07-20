@@ -3,30 +3,29 @@ interface Message {
   content: string;
 }
 
-interface GeminiResponse {
-  candidates: {
-    content: {
-      parts: {
-        text: string;
-      }[];
+interface OpenRouterResponse {
+  id: string;
+  choices: {
+    message: {
+      content: string;
       role: string;
     };
-    finishReason: string;
+    finish_reason: string;
     index: number;
   }[];
 }
 
 export class OpenRouterAPI {
-  private static API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-  private static API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
-  private static MODEL = 'gemini-1.5-flash-latest';
+  private static API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
+  private static API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+  private static MODEL = 'anthropic/claude-3-opus:beta';
   private static SITE_URL = window.location.origin;
   private static SITE_NAME = 'Azayd IT Consulting';
 
   // Rate limiting properties
   private static requestsInLastMinute = 0;
   private static lastRequestTime = 0;
-  private static readonly MAX_REQUESTS_PER_MINUTE = 15; // Gemini has different rate limits
+  private static readonly MAX_REQUESTS_PER_MINUTE = 10;
   private static readonly COOLDOWN_PERIOD = 60000; // 1 minute
 
   /**
@@ -53,173 +52,146 @@ export class OpenRouterAPI {
   }
 
   /**
-   * Convert OpenRouter-style messages to Gemini format
+   * Prepare the conversation context for the API request
    */
-  private static convertMessagesToGeminiFormat(messages: Message[]) {
-    const contents = [];
-    let systemInstruction = '';
+  public static prepareConversationContext(history: Message[]): Message[] {
+    // Ensure the conversation has a system message at the beginning
+    const hasSystemMessage = history.some(msg => msg.role === 'system');
     
-    for (const message of messages) {
-      if (message.role === 'system') {
-        systemInstruction = message.content;
-      } else {
-        contents.push({
-          role: message.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: message.content }]
-        });
-      }
+    const messages = [...history];
+    
+    if (!hasSystemMessage) {
+      messages.unshift({
+        role: 'system',
+        content: `You are an AI assistant for ${this.SITE_NAME}, a professional IT consulting company. 
+        Provide helpful, accurate, and professional responses. Be concise but thorough.
+        Current date: ${new Date().toLocaleDateString()}`
+      });
     }
     
-    return { contents, systemInstruction };
+    return messages;
   }
 
   /**
-   * Generate a response using the Gemini API
+   * Generate a response using the OpenRouter API
    */
   public static async generateResponse(messages: Message[]): Promise<string> {
-    // Check rate limit
     if (!this.checkRateLimit()) {
-      throw new Error('Rate limit exceeded. Please try again later.');
+      throw new Error('Rate limit exceeded. Please try again in a minute.');
+    }
+
+    if (!this.API_KEY) {
+      console.error('OpenRouter API key is not set');
+      return 'I\'m sorry, but I\'m not configured correctly. Please contact support.';
     }
 
     try {
-      const { contents, systemInstruction } = this.convertMessagesToGeminiFormat(messages);
-      
-      const requestBody: any = {
-        contents: contents,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        },
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          }
-        ]
-      };
-      
-      if (systemInstruction) {
-        requestBody.systemInstruction = {
-          parts: [{ text: systemInstruction }]
-        };
-      }
-
-      const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
+      const response = await fetch(this.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.API_KEY}`,
+          'HTTP-Referer': this.SITE_URL,
+          'X-Title': this.SITE_NAME
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          model: this.MODEL,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 1000,
+          stream: false
+        })
       });
 
       if (!response.ok) {
-        console.error('Gemini API Response Error:');
-        console.error('Status:', response.status, response.statusText);
-        
-        let errorData;
-        try {
-          errorData = await response.json();
-          console.error('Error Response Body:', errorData);
-        } catch (e) {
-          console.error('Could not parse error response as JSON');
-          const textError = await response.text();
-          console.error('Error Response Text:', textError);
-          throw new Error(`API Error ${response.status}: ${textError}`);
-        }
-        
-        const errorMessage = errorData.error?.message || errorData.message || 'Unknown error';
-        
-        if (response.status === 401) {
-          throw new Error(`Authentication Error (401): ${errorMessage}. Please check your Gemini API key.`);
-        }
-        
-        if (response.status === 429) {
-          throw new Error(`Rate limit exceeded (429): ${errorMessage}. Please try again later.`);
-        }
-        
-        throw new Error(`API Error ${response.status}: ${errorMessage}`);
+        const errorData = await response.text();
+        console.error('OpenRouter API error:', errorData);
+        throw new Error(`API request failed with status ${response.status}`);
       }
 
-      const data: GeminiResponse = await response.json();
-      
-      if (!data.candidates || data.candidates.length === 0) {
-        throw new Error('No response generated by Gemini API');
-      }
-      
-      const candidate = data.candidates[0];
-      if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-        throw new Error('Invalid response format from Gemini API');
-      }
-      
-      return candidate.content.parts[0].text || '';
-      
+      const data = await response.json() as OpenRouterResponse;
+      return data.choices[0]?.message?.content || 'I\'m sorry, I couldn\'t generate a response.';
     } catch (error) {
-      console.error('Gemini API error:', error);
+      console.error('Error generating response:', error);
       throw error;
     }
   }
 
   /**
-   * Prepare conversation context with enhanced system prompt
+   * Stream a response from the OpenRouter API
    */
-  public static prepareConversationContext(messages: Message[]): Message[] {
-    // Add system message at the beginning if not present
-    if (messages.length === 0 || messages[0].role !== 'system') {
-      return [
-        {
-          role: 'system',
-          content: `You are an AI assistant for Azayd IT Consulting, a leading IT consulting company. Here's comprehensive information about our company:
-
-**Company Overview:**
-- Name: Azayd IT Consulting
-- Location: MG Road, Bengaluru, India
-- Contact: contact@azayd.com, +91 XXXXXXXXXX
-- Website: ${this.SITE_URL}
-
-**Our Services:**
-1. **Web Development**: Modern, responsive websites and web applications using latest technologies
-2. **Mobile App Development**: Native and cross-platform mobile apps for iOS and Android
-3. **Cloud Solutions**: Migration, optimization, and management across AWS, Azure, and Google Cloud
-4. **AI & Machine Learning**: Custom AI solutions, data analytics, and machine learning implementations
-5. **DevOps & Automation**: CI/CD pipelines, infrastructure automation, and deployment optimization
-6. **Cybersecurity**: Security audits, encryption, secure authentication, and protection strategies
-7. **Digital Transformation**: Complete business digitization and process optimization
-8. **Custom Software Development**: Tailored software solutions for specific business needs
-
-**Key Features:**
-- Competitive pricing with customized solutions
-- Global service delivery with remote capabilities
-- Industry-best security practices
-- Scalable and high-performance solutions
-- Expert team with latest technology expertise
-
-**Instructions:**
-- Provide helpful, accurate, and professional responses
-- For website-specific questions, use the above company information
-- For general questions, provide comprehensive and helpful answers
-- Keep responses conversational but professional
-- Suggest scheduling consultations when appropriate
-- Always maintain a helpful and solution-oriented tone`
-        },
-        ...messages
-      ];
+  public static async streamResponse(messages: Message[], onChunk: (chunk: string) => void): Promise<string> {
+    if (!this.checkRateLimit()) {
+      throw new Error('Rate limit exceeded. Please try again in a minute.');
     }
-    
-    return messages;
+
+    if (!this.API_KEY) {
+      console.error('OpenRouter API key is not set');
+      return 'I\'m sorry, but I\'m not configured correctly. Please contact support.';
+    }
+
+    try {
+      const response = await fetch(this.API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.API_KEY}`,
+          'HTTP-Referer': this.SITE_URL,
+          'X-Title': this.SITE_NAME
+        },
+        body: JSON.stringify({
+          model: this.MODEL,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 1000,
+          stream: true
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('OpenRouter API error:', errorData);
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Failed to get response reader');
+      }
+
+      let fullResponse = '';
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices[0]?.delta?.content || '';
+              if (content) {
+                fullResponse += content;
+                onChunk(content);
+              }
+            } catch (e) {
+              console.error('Error parsing streaming response:', e);
+            }
+          }
+        }
+      }
+
+      return fullResponse;
+    } catch (error) {
+      console.error('Error streaming response:', error);
+      throw error;
+    }
   }
 }

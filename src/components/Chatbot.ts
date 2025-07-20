@@ -1,6 +1,8 @@
 import { Security } from '../utils/security';
-import { findLocalResponse } from '../utils/localResponses';
-import { OpenRouterAPI } from '../utils/openRouterApi';
+import { findLocalResponse, LocalResponseResult } from '../utils/localResponses';
+import { GeminiAPI } from '../utils/GeminiAPI';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 export class Chatbot {
   private container!: HTMLElement;
@@ -25,9 +27,9 @@ export class Chatbot {
     this.initialize3D();
   }
 
-  private async handleAIResponse(message: string, retryCount = 0): Promise<string> {
+  private async handleAIResponse(message: string, retryCount = 0): Promise<{ text: string; routes?: { text: string; path: string }[] }> {
     if (this.isWaitingForResponse) {
-      return "I'm still processing your previous message. Please wait a moment.";
+      return { text: "I'm still processing your previous message. Please wait a moment." };
     }
 
     this.isWaitingForResponse = true;
@@ -35,27 +37,31 @@ export class Chatbot {
 
     try {
       // First, check for local responses
-      const localResponse = findLocalResponse(message);
-      if (localResponse) {
-        return this.simulateStreamingResponse(localResponse);
+      const localResponseResult = findLocalResponse(message);
+      if (localResponseResult) {
+        await this.simulateStreamingResponse(localResponseResult.response);
+        return { 
+          text: localResponseResult.response,
+          routes: localResponseResult.routes 
+        };
       }
 
       // Prepare conversation context
       this.updateConversationHistory('user', message);
-      const messages = OpenRouterAPI.prepareConversationContext(this.conversationHistory);
+      const messages = GeminiAPI.prepareConversationContext(this.conversationHistory);
       
       // Get streaming response with enhanced error handling
       try {
-        const response = await OpenRouterAPI.generateResponse(messages);
+        const response = await GeminiAPI.generateResponse(messages);
         if (response && response.trim()) {
-          // For OpenRouter API, simulate streaming display
+          // For Gemini API, simulate streaming display
           await this.simulateStreamingResponse(response);
-          return response;
+          return { text: response };
         } else {
           throw new Error('Empty response from AI service');
         }
       } catch (apiError) {
-        console.error('OpenRouter API Error:', apiError);
+        console.error('Gemini API Error:', apiError);
         
         if (retryCount < this.maxRetries) {
           await new Promise(resolve => setTimeout(resolve, this.retryDelay * (retryCount + 1)));
@@ -63,7 +69,8 @@ export class Chatbot {
         }
         
         // Provide a more helpful fallback response
-        return this.generateFallbackResponse(message);
+        const fallbackResponse = this.generateFallbackResponse(message);
+        return { text: fallbackResponse };
       }
 
     } catch (error: any) {
@@ -103,14 +110,38 @@ export class Chatbot {
   private async simulateStreamingResponse(response: string): Promise<string> {
     // Simulate streaming for local responses
     return new Promise((resolve) => {
+      // For better markdown rendering, we'll stream in larger chunks
+      const chunkSize = 5; // Characters per chunk
       let index = 0;
       const interval = setInterval(() => {
         if (index < response.length) {
-          const chunk = response.charAt(index);
+          // Get the next chunk of text
+          const endIndex = Math.min(index + chunkSize, response.length);
+          const chunk = response.substring(index, endIndex);
           this.appendToCurrentMessage(chunk);
-          index++;
+          index = endIndex;
         } else {
           clearInterval(interval);
+          
+          // Final processing of the complete message to ensure proper markdown rendering
+          if (this.currentMessageElement) {
+            const contentDiv = this.currentMessageElement.querySelector('.chatbot__message-content');
+            if (contentDiv) {
+              const processedContent = this.processMessageContent(response);
+              
+              // Handle both synchronous and asynchronous return types
+              if (processedContent instanceof Promise) {
+                processedContent.then(html => {
+                  contentDiv.innerHTML = html;
+                  this.messages.scrollTop = this.messages.scrollHeight;
+                });
+              } else {
+                contentDiv.innerHTML = processedContent;
+                this.messages.scrollTop = this.messages.scrollHeight;
+              }
+            }
+          }
+          
           resolve(response);
         }
       }, 20); // Adjust speed as needed
@@ -122,19 +153,37 @@ export class Chatbot {
     
     const contentDiv = this.currentMessageElement.querySelector('.chatbot__message-content');
     if (contentDiv) {
-      contentDiv.textContent += text;
-      this.messages.scrollTop = this.messages.scrollHeight;
+      // Store the current text content
+      const currentText = contentDiv.textContent || '';
+      // Append the new text
+      const newText = currentText + text;
+      // Process the entire message with markdown
+      const processedContent = this.processMessageContent(newText);
+      
+      // Handle both synchronous and asynchronous return types
+      if (processedContent instanceof Promise) {
+        processedContent.then(html => {
+          contentDiv.innerHTML = html;
+          this.messages.scrollTop = this.messages.scrollHeight;
+        });
+      } else {
+        contentDiv.innerHTML = processedContent;
+        this.messages.scrollTop = this.messages.scrollHeight;
+      }
     }
   }
 
-  private getFallbackResponse(message: string): string {
-    const localResponse = findLocalResponse(message);
-    if (localResponse) {
-      return localResponse;
+  private getFallbackResponse(message: string): { text: string; routes?: { text: string; path: string }[] } {
+    const localResponseResult = findLocalResponse(message);
+    if (localResponseResult) {
+      return {
+        text: localResponseResult.response,
+        routes: localResponseResult.routes
+      };
     }
     
     // Use the same intelligent fallback logic
-    return this.generateFallbackResponse(message);
+    return { text: this.generateFallbackResponse(message) };
   }
 
   private updateConversationHistory(role: string, content: string): void {
@@ -194,7 +243,10 @@ export class Chatbot {
         try {
           const aiResponse = await this.handleAIResponse(message);
           if (aiResponse) {
-            this.updateConversationHistory('assistant', aiResponse);
+            // Add the bot message with text and routes
+            this.addMessage('bot', aiResponse);
+            // Only store the text in conversation history
+            this.updateConversationHistory('assistant', aiResponse.text);
           }
         } catch (error) {
           console.error('Error handling AI response:', error);
@@ -212,7 +264,13 @@ export class Chatbot {
     this.container.classList.toggle('chatbot--open', this.isOpen);
     
     if (this.isOpen) {
-      this.addMessage('bot', 'Hello! How can I assist you today with our IT consulting services?');
+      this.addMessage('bot', {
+        text: 'Hello! How can I assist you today with our IT consulting services?',
+        routes: [
+          { text: "View our services", path: "/services" },
+          { text: "Contact us", path: "/contact" }
+        ]
+      });
       const input = this.container.querySelector('.chatbot__input') as HTMLInputElement;
       setTimeout(() => input?.focus(), 300);
       this.startAnimation();
@@ -236,7 +294,7 @@ export class Chatbot {
           autoplay
         ></lottie-player>
       </div>
-      <div class="chatbot__message-content"></div>
+      <div class="chatbot__message-content" data-markdown-content="true"></div>
     `;
 
     messageEl.style.opacity = '0';
@@ -253,26 +311,71 @@ export class Chatbot {
     return messageEl;
   }
 
-  private addMessage(type: 'user' | 'bot', content: string): void {
+  private addMessage(type: 'user' | 'bot', content: string | { text: string; routes?: { text: string; path: string }[] }): void {
     const messageEl = document.createElement('div');
     messageEl.className = `chatbot__message chatbot__message--${type}`;
     
+    // Handle both string content and object with text and routes
+    const messageText = typeof content === 'string' ? content : content.text;
+    const routes = typeof content === 'string' ? undefined : content.routes;
+    
     if (type === 'bot') {
-      messageEl.innerHTML = `
-        <div class="chatbot__message-avatar">
-          <lottie-player
-            src="https://assets9.lottiefiles.com/packages/lf20_xyadoh9h.json"
-            background="transparent"
-            speed="1"
-            style="width: 24px; height: 24px;"
-            loop
-            autoplay
-          ></lottie-player>
-        </div>
-        <div class="chatbot__message-content">${content}</div>
+      // Process markdown and sanitize HTML
+      const processedContent = this.processMessageContent(messageText);
+      
+      // Create the message element structure
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'chatbot__message-avatar';
+      avatarDiv.innerHTML = `
+        <lottie-player
+          src="https://assets9.lottiefiles.com/packages/lf20_xyadoh9h.json"
+          background="transparent"
+          speed="1"
+          style="width: 24px; height: 24px;"
+          loop
+          autoplay
+        ></lottie-player>
       `;
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'chatbot__message-content';
+      
+      // Append the elements to the message
+      messageEl.appendChild(avatarDiv);
+      messageEl.appendChild(contentDiv);
+      
+      // Handle both synchronous and asynchronous return types
+      if (processedContent instanceof Promise) {
+        // If it's a Promise, update the content when resolved
+        processedContent.then(html => {
+          contentDiv.innerHTML = html;
+        });
+      } else {
+        // If it's a string, set the content immediately
+        contentDiv.innerHTML = processedContent;
+      }
+      
+      // Add links if routes are provided
+      if (routes && routes.length > 0) {
+        const routesContainer = document.createElement('div');
+        routesContainer.className = 'routes-container';
+        
+        // Add each route as a link
+        routes.forEach(route => {
+          const link = document.createElement('a');
+          link.href = route.path;
+          link.className = 'chatbot__link';
+          link.textContent = route.text;
+          routesContainer.appendChild(link);
+        });
+        
+        // Append the routes container to the message
+        messageEl.appendChild(routesContainer);
+      }
     } else {
-      messageEl.innerHTML = `<div class="chatbot__message-content">${content}</div>`;
+      // For user messages, just sanitize the content
+      const sanitizedText = DOMPurify.sanitize(messageText);
+      messageEl.innerHTML = `<div class="chatbot__message-content">${sanitizedText}</div>`;
     }
 
     messageEl.style.opacity = '0';
@@ -286,6 +389,122 @@ export class Chatbot {
     });
 
     this.messages.scrollTop = this.messages.scrollHeight;
+  }
+  
+  /**
+   * Process message content to render markdown, code blocks, and hyperlinks
+   * @returns HTML string or Promise<string> if marked is in async mode
+   */
+  private processMessageContent(text: string): string | Promise<string> {
+    // Update your marked configuration
+    marked.setOptions({
+      gfm: true, // GitHub Flavored Markdown
+      breaks: true, // Convert \n to <br>
+      pedantic: false,
+      silent: false
+    });
+    
+    // Enhance the renderer for better formatting
+    const renderer = new marked.Renderer();
+    
+    // Function to highlight code with basic syntax highlighting
+    const highlightCode = (code: string, language: string): string => {
+      // Simple syntax highlighting
+      if (!code) return '';
+      
+      // Escape HTML to prevent XSS
+      const escapedCode = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      
+      return escapedCode;
+    };
+    
+    // Improve code block rendering
+    renderer.code = function({ text, lang, escaped }: { text: string, lang?: string, escaped?: boolean }): string {
+      const highlightedCode = highlightCode(text, lang || '');
+      return `<pre><code class="language-${lang || 'plaintext'}">${highlightedCode}</code></pre>`;
+    };
+    
+    // Improve list rendering
+    renderer.list = function(token: any): string {
+      const type = token.ordered ? 'ol' : 'ul';
+      const startAttr = (token.ordered && token.start !== '' && token.start !== 1) ? ` start="${token.start}"` : '';
+      let body = '';
+      
+      // Process each list item
+      if (token.items) {
+        for (const item of token.items) {
+          body += this.listitem(item);
+        }
+      }
+      
+      return `<${type}${startAttr} class="chatbot-${type}">${body}</${type}>`;
+    };
+    
+    // Improve table rendering
+    renderer.table = function(token: any): string {
+      let header = '';
+      let body = '';
+      
+      // Process header
+      if (token.header && token.header.length) {
+        header = '<tr>';
+        for (const cell of token.header) {
+          header += this.tablecell(cell);
+        }
+        header += '</tr>';
+      }
+      
+      // Process rows
+      if (token.rows) {
+        for (const row of token.rows) {
+          let rowHtml = '<tr>';
+          for (const cell of row) {
+            rowHtml += this.tablecell(cell);
+          }
+          rowHtml += '</tr>';
+          body += rowHtml;
+        }
+      }
+      
+      return `<table class="chatbot-table">\n<thead>\n${header}</thead>\n<tbody>\n${body}</tbody>\n</table>\n`;
+    };
+    
+    const parsedContent = marked.parse(text, { renderer });
+    
+    // Handle both synchronous and asynchronous return types
+    if (parsedContent instanceof Promise) {
+      // If it's a Promise, we need to return a Promise
+      return parsedContent.then(html => {
+        // Sanitize HTML to prevent XSS
+        const sanitizedHtml = DOMPurify.sanitize(html);
+        
+        // Process special patterns like URLs not in markdown
+        return this.processSpecialPatterns(sanitizedHtml);
+      });
+    } else {
+      // If it's a string, process it synchronously
+      // Sanitize HTML to prevent XSS
+      const html = DOMPurify.sanitize(parsedContent);
+      
+      // Process special patterns like URLs not in markdown
+      return this.processSpecialPatterns(html);
+    }
+  }
+  
+  /**
+   * Process special patterns in text that aren't handled by markdown
+   */
+  private processSpecialPatterns(html: string): string {
+    // Convert plain URLs to clickable links if they're not already in an <a> tag
+    const urlRegex = /(https?:\/\/[^\s<]+)(?![^<]*>|[^<>]*<\/a>)/g;
+    html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    return html;
   }
 
   private initializeUI(): void {

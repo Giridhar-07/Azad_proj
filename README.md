@@ -1,6 +1,6 @@
 # Azad Project - Modern React Web Application
 
-A modern, responsive web application built with React, TypeScript, and Vite featuring dark/light mode toggle, smooth animations, and optimized performance.
+A modern, responsive web application built with React, TypeScript, and Vite featuring dark/light mode toggle, smooth animations, optimized performance, and enhanced security.
 
 ## ✨ Features
 
@@ -11,6 +11,7 @@ A modern, responsive web application built with React, TypeScript, and Vite feat
 - 🎭 **Smooth Animations** - Framer Motion and AOS integration
 - 🎯 **Accessibility First** - WCAG compliant with keyboard navigation
 - 🚀 **Production Ready** - Optimized builds and deployment configurations
+- 🔒 **Enhanced Security** - API key protection, CSP implementation, and secure backend proxy
 
 ## 🛠️ Tech Stack
 
@@ -21,6 +22,8 @@ A modern, responsive web application built with React, TypeScript, and Vite feat
 - **Routing**: React Router DOM
 - **Icons**: Lucide React
 - **Build Tool**: Vite with optimized production config
+- **Backend**: Django with REST Framework
+- **Security**: Content Security Policy, API key protection, XSS prevention
 
 ## 📦 Installation
 
@@ -140,7 +143,7 @@ Breakpoints:
 
 Create a `.env` file for development based on the `.env.example` template:
 ```env
-# API Keys
+# API Keys (Server-side only, not exposed to client)
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
 VITE_HUGGINGFACE_API_KEY=your_huggingface_api_key_here
 
@@ -148,6 +151,8 @@ VITE_HUGGINGFACE_API_KEY=your_huggingface_api_key_here
 VITE_APP_TITLE=Azad Project
 VITE_API_URL=http://localhost:8080
 ```
+
+> **IMPORTANT SECURITY NOTE**: API keys are now handled securely through a backend proxy and are never exposed to the client. The frontend code no longer directly accesses API keys.
 
 > **Important**: Never commit your `.env` file with real API keys to version control. The `.env` file is already included in `.gitignore`.
 

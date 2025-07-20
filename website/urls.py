@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views, api_views
+from . import views, api_views, api_proxy
 
 # API Router for DRF ViewSets
 router = DefaultRouter()
@@ -41,6 +41,9 @@ urlpatterns = [
     path('api/jobs/recent/', api_views.recent_jobs, name='api_recent_jobs'),
     path('api/jobs/departments/', api_views.job_departments, name='api_job_departments'),
     path('api/jobs/locations/', api_views.job_locations, name='api_job_locations'),
+    
+    # API proxy endpoints for secure third-party API access
+    path('api/proxy/gemini/', api_proxy.gemini_api_proxy, name='gemini_api_proxy'),
     
     # Legacy function-based view redirects (for backward compatibility)
     path('home/', views.home, name='home_legacy'),

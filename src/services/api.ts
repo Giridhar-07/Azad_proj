@@ -13,7 +13,7 @@ const api = axios.create({
 api.defaults.timeout = 10000; // 10 seconds timeout
 
 // Flag to determine if we should use mock data
-const USE_MOCK_DATA = false; // Set to true to use mock data, false to use real API
+const USE_MOCK_DATA = true; // Set to true to use mock data, false to use real API
 
 // Add CSRF token for Django
 const getCsrfToken = (): string | null => {
