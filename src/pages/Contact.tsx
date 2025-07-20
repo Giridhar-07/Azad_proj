@@ -352,11 +352,11 @@ const Contact: React.FC = () => {
                   </div>
                   <div className="contact-details">
                     <h4>Email</h4>
-                    <p>hello@azayd.com</p>
-                    <p>support@azayd.com</p>
+                    <p>azayd8752@gmail.com</p>
+                    
                   </div>
                   <div className="contact-action">
-                    <a href="mailto:hello@azayd.com" className="contact-link">
+                    <a href="mailto:azayd8752@gmail.com" className="contact-link">
                       <i className="fas fa-external-link-alt"></i>
                     </a>
                   </div>
@@ -372,7 +372,7 @@ const Contact: React.FC = () => {
                   </div>
                   <div className="contact-details">
                     <h4>Phone</h4>
-                    <p>+1 (555) 123-4567</p>
+                    <p>+91 xxxxxxxxxx</p>
                     <p>Mon - Fri, 9AM - 6PM EST</p>
                   </div>
                   <div className="contact-action">
