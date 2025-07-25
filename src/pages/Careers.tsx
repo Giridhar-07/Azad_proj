@@ -431,7 +431,7 @@ const Careers: React.FC = () => {
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
               <TechSphere />
-              <Environment preset="city" />
+              <Environment files="/hdri/potsdamer_platz_1k.hdr" />
               <OrbitControls enableZoom={false} enablePan={false} />
             </Suspense>
           </Canvas>

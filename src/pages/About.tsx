@@ -403,7 +403,7 @@ const About: React.FC = () => {
           <Suspense fallback={<div className="loading-3d">Loading 3D Scene...</div>}>
             <Canvas>
               <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-              <Environment preset="sunset" />
+              <Environment files="/hdri/venice_sunset_1k.hdr" />
               <OrbitControls enableZoom={false} enablePan={false} />
               <TechSphere />
             </Canvas>
