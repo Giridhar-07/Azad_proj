@@ -1,0 +1,398 @@
+/* ========================================
+   SKELETON LOADING ANIMATIONS
+   Modern, theme-aware skeleton components
+======================================== */
+
+/* Base Skeleton Styles */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--glass-background) 25%,
+    var(--card-background) 50%,
+    var(--glass-background) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-theme);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton Variants */
+.skeleton--text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: var(--border-radius-sm);
+}
+
+.skeleton--text-lg {
+  height: 1.5rem;
+  margin-bottom: 0.75rem;
+  border-radius: var(--border-radius-sm);
+}
+
+.skeleton--title {
+  height: 2rem;
+  margin-bottom: 1rem;
+  border-radius: var(--border-radius-md);
+}
+
+.skeleton--avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+.skeleton--avatar-lg {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+}
+
+.skeleton--button {
+  height: 2.5rem;
+  width: 120px;
+  border-radius: var(--border-radius-lg);
+}
+
+.skeleton--card {
+  height: 200px;
+  border-radius: var(--border-radius-xl);
+}
+
+.skeleton--image {
+  width: 100%;
+  height: 200px;
+  border-radius: var(--border-radius-lg);
+}
+
+/* Skeleton Containers */
+.skeleton-container {
+  padding: var(--spacing-lg);
+  background: var(--card-background);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  transition: var(--transition-theme);
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-xl);
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Page-specific Skeletons */
+
+/* Home Page Hero Skeleton */
+.skeleton-hero {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-3xl) var(--spacing-xl);
+}
+
+.skeleton-hero__title {
+  width: 60%;
+  max-width: 600px;
+  height: 4rem;
+}
+
+.skeleton-hero__subtitle {
+  width: 40%;
+  max-width: 400px;
+  height: 1.5rem;
+}
+
+.skeleton-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  width: 100%;
+  max-width: 800px;
+  margin-top: var(--spacing-2xl);
+}
+
+.skeleton-stat {
+  height: 120px;
+  border-radius: var(--border-radius-xl);
+}
+
+/* Services Grid Skeleton */
+.skeleton-services {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--spacing-xl);
+  padding: var(--spacing-2xl) 0;
+}
+
+.skeleton-service-card {
+  background: var(--card-background);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-xl);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  transition: var(--transition-theme);
+}
+
+.skeleton-service-card__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--border-radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.skeleton-service-card__title {
+  width: 80%;
+  height: 1.5rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.skeleton-service-card__description {
+  width: 100%;
+  height: 1rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-service-card__description:last-child {
+  width: 70%;
+}
+
+/* Team Member Skeleton */
+.skeleton-team-card {
+  background: var(--card-background);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-xl);
+  text-align: center;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  transition: var(--transition-theme);
+}
+
+.skeleton-team-card__avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto var(--spacing-lg);
+}
+
+.skeleton-team-card__name {
+  width: 60%;
+  height: 1.5rem;
+  margin: 0 auto var(--spacing-sm);
+}
+
+.skeleton-team-card__role {
+  width: 80%;
+  height: 1rem;
+  margin: 0 auto var(--spacing-md);
+}
+
+.skeleton-team-card__bio {
+  width: 100%;
+  height: 1rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-team-card__bio:last-child {
+  width: 75%;
+}
+
+/* Blog/News Skeleton */
+.skeleton-blog-card {
+  background: var(--card-background);
+  border-radius: var(--border-radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  transition: var(--transition-theme);
+}
+
+.skeleton-blog-card__image {
+  width: 100%;
+  height: 200px;
+  border-radius: 0;
+}
+
+.skeleton-blog-card__content {
+  padding: var(--spacing-lg);
+}
+
+.skeleton-blog-card__title {
+  width: 90%;
+  height: 1.5rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.skeleton-blog-card__excerpt {
+  width: 100%;
+  height: 1rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-blog-card__excerpt:last-child {
+  width: 60%;
+}
+
+.skeleton-blog-card__meta {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.skeleton-blog-card__date {
+  width: 80px;
+  height: 0.875rem;
+}
+
+.skeleton-blog-card__author {
+  width: 100px;
+  height: 0.875rem;
+}
+
+/* Navigation Skeleton */
+.skeleton-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--card-background);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--glass-border);
+  transition: var(--transition-theme);
+}
+
+.skeleton-nav__logo {
+  width: 120px;
+  height: 2rem;
+}
+
+.skeleton-nav__menu {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.skeleton-nav__item {
+  width: 80px;
+  height: 1.25rem;
+}
+
+.skeleton-nav__cta {
+  width: 100px;
+  height: 2.5rem;
+  border-radius: var(--border-radius-lg);
+}
+
+/* Form Skeleton */
+.skeleton-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  background: var(--card-background);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  transition: var(--transition-theme);
+}
+
+.skeleton-form__field {
+  height: 3rem;
+  border-radius: var(--border-radius-md);
+}
+
+.skeleton-form__textarea {
+  height: 8rem;
+  border-radius: var(--border-radius-md);
+}
+
+.skeleton-form__submit {
+  height: 3rem;
+  width: 150px;
+  border-radius: var(--border-radius-lg);
+  align-self: flex-start;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .skeleton-hero__title {
+    width: 80%;
+    height: 3rem;
+  }
+  
+  .skeleton-hero__subtitle {
+    width: 70%;
+  }
+  
+  .skeleton-hero__stats {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  .skeleton-services {
+    grid-template-columns: 1fr;
+  }
+  
+  .skeleton-nav__menu {
+    display: none;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--glass-background);
+  }
+}
+
+/* Loading States with Fade-in */
+.skeleton-fade-in {
+  animation: skeleton-fade-in 0.5s ease-in-out;
+}
+
+@keyframes skeleton-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Content Loading Transition */
+.content-loading {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.content-loaded {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--transition-normal);
+}

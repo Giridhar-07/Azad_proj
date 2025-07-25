@@ -55,6 +55,7 @@
   margin-bottom: 2rem;
   font-size: 0.9rem;
   font-weight: 500;
+  color: var(--text-color);
 }
 
 .hero-title {
@@ -65,7 +66,7 @@
 }
 
 .gradient-text {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+  background: var(--gradient-text-light, linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4));
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

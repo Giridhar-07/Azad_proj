@@ -128,6 +128,14 @@ const Home: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   
+  // Add class to body for theme-specific styling
+  useEffect(() => {
+    document.body.classList.add('home-page');
+    return () => {
+      document.body.classList.remove('home-page');
+    };
+  }, []);
+  
   // Intersection observer for scroll-based animations
   const [ref, inView] = useInView({
     threshold: 0.2,
@@ -170,7 +178,7 @@ const Home: React.FC = () => {
       // Set mock homepage data structure
       setHomeData({
         hero: {
-          title: "Welcome to AZAYD",
+          title: "Welcome to Ayazd",
           subtitle: "Transforming Ideas into Digital Reality",
           description: "We combine cutting-edge innovation with deep expertise to transform your digital vision into reality.",
           cta_primary: "Get Started",
@@ -318,13 +326,14 @@ const Home: React.FC = () => {
           variants={fadeIn}
         >
           <motion.h1 
-            className="hero-title"
+            className="hero-title gradient-text"
             variants={fadeIn}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
+            style={{ position: 'relative', zIndex: 5 }} /* Ensure proper stacking */
           >
-            {homeData?.hero.title || "Welcome to"} <span className="gradient-text animated-gradient">AZAYD</span>
+            {homeData?.hero.title || "Welcome to AZAYD"}
           </motion.h1>
           <motion.p 
             className="hero-subtitle"
@@ -333,7 +342,7 @@ const Home: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            {homeData?.hero.subtitle || "Transforming Ideas into"} <span className="typing-text">Digital Reality</span>
+            {homeData?.hero.subtitle || "Transforming Ideas into Digital Reality"}
           </motion.p>
           <motion.p
             variants={fadeIn}

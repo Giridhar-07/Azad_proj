@@ -1,12 +1,24 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import uriSafePlugin from './vite-uri-plugin'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default ({ mode }) => {
+  // Load environment variables based on mode
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  return defineConfig({
   // Configure MIME types for 3D models
   assetsInclude: ['**/*.glb'],
-  plugins: [react()],
+  plugins: [
+    // Add our custom URI safe plugin first
+    uriSafePlugin(),
+    react()
+  ],
+  // Use a different index.html file for development
+  appType: 'spa',
+  root: process.cwd(),
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -28,6 +40,7 @@ export default defineConfig({
       },
     },
     rollupOptions: {
+      input: resolve(__dirname, 'index.dev.html'),
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
@@ -42,25 +55,40 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    fs: {
+      // Allow serving files from one level up to the project root
+      allow: ['..'],
+      // Explicitly deny problematic paths
+      deny: ['.env', '.env.*', 'node_modules/.vite'],
+    },
     proxy: {
       // Proxy API requests to Django backend
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
       // Proxy media requests to Django backend
       '/media': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
       // Proxy admin requests to Django backend
       '/admin': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
     },
   },
-})
+  // Handle URI encoding issues
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
+  // Use environment variables for base URL
+  base: env.VITE_BASE_URL || '/dist/',
+});
+}

@@ -1,0 +1,302 @@
+/* Job Application Form Styles */
+.job-application-form-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: var(--bg-card, #fff);
+  color: var(--text-primary, #333);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.job-application-form-container h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary, #333);
+  font-size: 1.8rem;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.job-application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: var(--input-bg, #fff);
+  color: var(--text-primary, #333);
+  transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #4a6cf7;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
+}
+
+.form-group input.error,
+.form-group textarea.error {
+  border-color: #e74c3c;
+}
+
+.error-text {
+  color: var(--error-color, #e74c3c);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  transition: color 0.3s ease;
+}
+
+.error-message {
+  color: var(--error-color, #e74c3c);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  transition: color 0.3s ease;
+}
+
+.error-message {
+  background-color: #fdecea;
+  border-left: 4px solid #e74c3c;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.error-message p {
+  color: #e74c3c;
+  margin: 0;
+}
+
+.resume-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.resume-help-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.resume-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-input-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.file-select-button {
+  background-color: var(--button-secondary-bg, #f0f0f0);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-primary, #333);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.file-select-button:hover {
+  background-color: var(--button-secondary-hover-bg, #e0e0e0);
+}
+
+.file-select-button:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.file-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+  transition: color 0.3s ease;
+}
+
+.file-format-text {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #888);
+  margin: 0.25rem 0 0 0;
+  transition: color 0.3s ease;
+}
+
+.resume-link {
+  margin-top: 1rem;
+}
+
+.resume-link label {
+  font-size: 0.875rem;
+  font-weight: normal;
+  color: var(--text-secondary, #666);
+  transition: color 0.3s ease;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background-color: #4a6cf7;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #3a5ce5;
+}
+
+.btn-secondary {
+  background-color: var(--button-secondary-bg, #f0f0f0);
+  color: var(--text-primary, #333);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--button-secondary-hover-bg, #e0e0e0);
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.submit-button {
+  flex: 1;
+}
+
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Success Message Styles */
+.job-application-success {
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: var(--bg-card, #fff);
+  color: var(--text-primary, #333);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.success-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.success-icon svg {
+  color: #2ecc71;
+}
+
+.job-application-success h2 {
+  color: #2ecc71;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+}
+
+.job-application-success p {
+  color: var(--text-secondary, #555);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  transition: color 0.3s ease;
+}
+
+.job-application-success button {
+  margin-top: 1.5rem;
+}
+
+/* Dark Theme Styles */
+.dark-theme {
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-color: #334155;
+  --input-bg: #0f172a;
+  --button-secondary-bg: #334155;
+  --button-secondary-hover-bg: #475569;
+  --error-color: #f87171;
+}
+
+/* Light Theme Styles */
+.light-theme {
+  --bg-card: #fff;
+  --text-primary: #333;
+  --text-secondary: #666;
+  --text-tertiary: #888;
+  --border-color: #ddd;
+  --input-bg: #fff;
+  --button-secondary-bg: #f0f0f0;
+  --button-secondary-hover-bg: #e0e0e0;
+  --error-color: #e74c3c;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .job-application-form-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}

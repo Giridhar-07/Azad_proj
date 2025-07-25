@@ -199,6 +199,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
                 className="service-icon-placeholder"
                 whileHover={{ 
                   rotate: 360,
+                  scale: 1.1,
                   transition: { duration: 0.6 }
                 }}
               >

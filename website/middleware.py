@@ -18,11 +18,12 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
         csp_directives = [
             "default-src 'self'",
             f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net",
-            # Allow unsafe-inline for styles in development mode
+            # Allow unsafe-inline for styles and scripts in development mode
             f"style-src 'self' 'unsafe-inline' 'nonce-{nonce}' https://fonts.googleapis.com" if settings.DEBUG else f"style-src 'self' 'nonce-{nonce}' https://fonts.googleapis.com",
+            f"script-src 'self' 'unsafe-inline' 'nonce-{nonce}' https://cdn.jsdelivr.net" if settings.DEBUG else f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net",
             "img-src 'self' data: https://*",
             "font-src 'self' https://fonts.gstatic.com",
-            "connect-src 'self' https://api.openai.com https://generativelanguage.googleapis.com",
+            "connect-src 'self' http://localhost:3000 http://localhost:8000 http://127.0.0.1:8080 https://api.openai.com https://generativelanguage.googleapis.com" if settings.DEBUG else "connect-src 'self' https://api.openai.com https://generativelanguage.googleapis.com",
             "frame-src 'none'",
             "object-src 'none'",
             "base-uri 'self'",

@@ -1,0 +1,204 @@
+/* Resume Form Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background-color: var(--bg-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 40px;
+}
+
+.resume-form-modal {
+  border-top: 5px solid var(--primary-color);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.modal-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: var(--primary-color);
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.form-header h3 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: var(--heading-color);
+}
+
+.form-header p {
+  font-size: 1rem;
+  color: var(--text-color-light);
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+/* Resume Type Selector */
+.resume-type-selector {
+  margin-bottom: 20px;
+}
+
+.resume-type-options {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.resume-type-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.resume-type-option.active {
+  border-color: var(--primary-color);
+  background-color: rgba(var(--primary-rgb), 0.05);
+}
+
+.resume-type-option input {
+  margin-right: 10px;
+}
+
+.resume-type-option .option-text {
+  font-weight: 500;
+}
+
+/* File Upload Styling */
+.file-upload-container {
+  margin-top: 10px;
+}
+
+.file-upload-button {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 5px;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.file-upload-button.error {
+  border-color: var(--error-color);
+}
+
+.file-upload-button button {
+  white-space: nowrap;
+  padding: 8px 15px;
+}
+
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-color-light);
+  font-size: 0.9rem;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 30px 20px;
+  }
+  
+  .form-header h3 {
+    font-size: 1.75rem;
+  }
+  
+  .form-header p {
+    max-width: 100%;
+  }
+  
+  .resume-type-options {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .file-upload-button {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .file-upload-button button {
+    width: 100%;
+  }
+  
+  .file-name {
+    padding: 5px;
+    width: 100%;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .resume-type-option {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .resume-type-option.active {
+    background-color: rgba(var(--primary-rgb), 0.15);
+  }
+  
+  .modal-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}

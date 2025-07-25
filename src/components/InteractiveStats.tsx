@@ -78,8 +78,8 @@ const StatItem: React.FC<StatItemProps> = ({
         transition: { duration: 0.3 }
       }}
       style={{
-        background: `linear-gradient(135deg, ${color}15, ${color}05)`,
-        borderColor: `${color}30`
+        background: `linear-gradient(135deg, ${color}25, ${color}10)`,
+        borderColor: `${color}40`
       }}
     >
       {icon && (
@@ -94,7 +94,7 @@ const StatItem: React.FC<StatItemProps> = ({
       )}
       <motion.div 
         className="stat-value"
-        style={{ color }}
+        style={{ color: `var(--text-color)` }}
         initial={{ scale: 0.8 }}
         animate={isInView ? { scale: 1 } : {}}
         transition={{ duration: 0.5, delay: delay * 0.1 + 0.3 }}
