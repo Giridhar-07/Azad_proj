@@ -8,6 +8,7 @@ import 'aos/dist/aos.css';
 import '../styles/about.css';
 import TechSphere from '../components/TechSphere';
 import { apiService, TeamMember as TeamMemberType } from '../services/api';
+import { mockApiService } from '../services/mockApiService';
 import { SkeletonTeamGrid, SkeletonHero, SkeletonContainer } from '../components/SkeletonLoader';
 
 // Lazy load components for better performance
@@ -187,14 +188,31 @@ const About: React.FC = () => {
   });
   
   // Company statistics with real-time updates
-  const companyStatsArray = useMemo(() => [
-    { value: 150, label: "Projects Completed", suffix: "+" },
-    { value: 8, label: "Years Experience", suffix: "+" },
-    { value: state.teamMembers.length || 25, label: "Team Members", suffix: "" },
-    { value: 4.9, label: "Client Satisfaction", suffix: "/5" },
-    { value: 15, label: "Countries Served", suffix: "+" },
-    { value: 30, label: "Technologies Used", suffix: "+" },
-  ], [state.teamMembers.length]);
+  const companyStatsArray = useMemo(() => {
+    // Safely determine team members count
+    let teamMembersCount = 25; // Default fallback value
+    
+    try {
+      if (!state.teamMembers) {
+        console.warn('Team members is undefined or null, using default count');
+      } else if (!Array.isArray(state.teamMembers)) {
+        console.warn('Team members is not an array, using default count:', state.teamMembers);
+      } else {
+        teamMembersCount = state.teamMembers.length;
+      }
+    } catch (error) {
+      console.error('Error calculating team members count:', error);
+    }
+    
+    return [
+      { value: 150, label: "Projects Completed", suffix: "+" },
+      { value: 8, label: "Years Experience", suffix: "+" },
+      { value: teamMembersCount, label: "Team Members", suffix: "" },
+      { value: 4.9, label: "Client Satisfaction", suffix: "/5" },
+      { value: 15, label: "Countries Served", suffix: "+" },
+      { value: 30, label: "Technologies Used", suffix: "+" },
+    ];
+  }, [state.teamMembers]);
 
   // Company timeline events
   const companyTimelineEvents = useMemo(() => [
@@ -207,39 +225,78 @@ const About: React.FC = () => {
 
   // Enhanced filtering with search functionality
   const filteredTeamMembers = useMemo(() => {
-    let filtered = state.teamMembers;
-    
-    // Role-based filtering
-    if (state.filterRole !== 'all') {
-      filtered = filtered.filter(member => 
-        member.position.toLowerCase().includes(state.filterRole.toLowerCase()) ||
-        member.department?.toLowerCase().includes(state.filterRole.toLowerCase())
-      );
+    try {
+      // Ensure teamMembers is an array
+      if (!state.teamMembers) {
+        console.warn('Team members is undefined or null');
+        return [];
+      }
+      
+      if (!Array.isArray(state.teamMembers)) {
+        console.warn('Team members is not an array:', state.teamMembers);
+        return [];
+      }
+      
+      let filtered = [...state.teamMembers]; // Create a copy to avoid mutation issues
+      
+      // Role-based filtering
+      if (state.filterRole !== 'all') {
+        filtered = filtered.filter(member => {
+          if (!member) return false;
+          return (member.position && member.position.toLowerCase().includes(state.filterRole.toLowerCase())) ||
+                 (member.department && member.department.toLowerCase().includes(state.filterRole.toLowerCase()));
+        });
+      }
+      
+      // Search term filtering
+      if (state.searchTerm) {
+        const searchLower = state.searchTerm.toLowerCase();
+        filtered = filtered.filter(member => {
+          if (!member) return false;
+          return (member.name && member.name.toLowerCase().includes(searchLower)) ||
+                 (member.position && member.position.toLowerCase().includes(searchLower)) ||
+                 (member.bio && member.bio.toLowerCase().includes(searchLower)) ||
+                 (member.skills && Array.isArray(member.skills) && 
+                  member.skills.some(skill => typeof skill === 'string' && skill.toLowerCase().includes(searchLower)));
+        });
+      }
+      
+      return filtered;
+    } catch (error) {
+      console.error('Error in filteredTeamMembers:', error);
+      return [];
     }
-    
-    // Search term filtering
-    if (state.searchTerm) {
-      const searchLower = state.searchTerm.toLowerCase();
-      filtered = filtered.filter(member =>
-        member.name.toLowerCase().includes(searchLower) ||
-        member.position.toLowerCase().includes(searchLower) ||
-        member.bio.toLowerCase().includes(searchLower) ||
-        member.skills?.some(skill => skill.toLowerCase().includes(searchLower))
-      );
-    }
-    
-    return filtered;
   }, [state.teamMembers, state.filterRole, state.searchTerm]);
   
   // Get unique roles for filtering
   const availableRoles = useMemo(() => {
-    const roles = state.teamMembers.flatMap(member => {
-      const roles = [];
-      if (member.position) roles.push(member.position.split(' ')[0]);
-      if (member.department) roles.push(member.department);
-      return roles;
-    });
-    return ['all', ...Array.from(new Set(roles))];
+    try {
+      if (!state.teamMembers) {
+        console.warn('Team members is undefined or null');
+        return ['all'];
+      }
+      
+      if (!Array.isArray(state.teamMembers)) {
+        console.warn('Team members is not an array:', state.teamMembers);
+        return ['all'];
+      }
+      
+      if (state.teamMembers.length === 0) {
+        return ['all'];
+      }
+      
+      const roles = state.teamMembers.flatMap(member => {
+        if (!member) return [];
+        const memberRoles = [];
+        if (member.position) memberRoles.push(member.position.split(' ')[0]);
+        if (member.department) memberRoles.push(member.department);
+        return memberRoles;
+      });
+      return ['all', ...Array.from(new Set(roles))];
+    } catch (error) {
+      console.error('Error extracting roles from team members:', error);
+      return ['all'];
+    }
   }, [state.teamMembers]);
   
   /**
@@ -249,53 +306,71 @@ const About: React.FC = () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
-      // Fetch team highlights for the about page
-      const teamHighlights = await apiService.getEnhancedTeamHighlights();
-      
-      if (teamHighlights.success && teamHighlights.results.length > 0) {
-        // Use team highlights if available
-        const enhancedMembers = teamHighlights.results.map(member => ({
-          ...member,
-          skills: member.skills || [],
-          years_experience: member.years_experience || 0,
-          is_leadership: member.is_leadership || false,
-          department: member.department || 'General',
-          achievements: member.achievements || []
-        }));
+      try {
+        // Fetch team highlights for the about page
+        const teamHighlights = await apiService.getEnhancedTeamHighlights();
         
-        setState(prev => ({
-          ...prev,
-          teamMembers: enhancedMembers,
-          loading: false,
-          error: null
-        }));
-      } else {
-        // Fallback to regular team members
+        if (teamHighlights && teamHighlights.success && teamHighlights.results && 
+            Array.isArray(teamHighlights.results) && teamHighlights.results.length > 0) {
+          // Use team highlights if available
+          const enhancedMembers = teamHighlights.results.map(member => ({
+            ...member,
+            skills: Array.isArray(member.skills) ? member.skills : [],
+            years_experience: member.years_experience || 0,
+            is_leadership: member.is_leadership || false,
+            department: member.department || 'General',
+            achievements: Array.isArray(member.achievements) ? member.achievements : []
+          }));
+          
+          setState(prev => ({
+            ...prev,
+            teamMembers: enhancedMembers,
+            loading: false,
+            error: null
+          }));
+          return;
+        }
+      } catch (highlightError) {
+        console.error('Error fetching team highlights:', highlightError);
+        // Continue to fallback
+      }
+      
+      // Fallback to regular team members
+      try {
         const teamData = await apiService.getTeamMembers({
           ordering: '-is_leadership,-years_experience',
           page: 1
         });
         
-        const members = teamData.results || [];
-        const enhancedMembers = members.slice(0, 8).map(member => ({
-          ...member,
-          skills: member.skills || [],
-          years_experience: member.years_experience || 0,
-          is_leadership: member.is_leadership || false,
-          department: member.department || 'General',
-          achievements: member.achievements || []
-        }));
-        
-        setState(prev => ({
-          ...prev,
-          teamMembers: enhancedMembers,
-          loading: false,
-          error: null
-        }));
+        if (teamData && teamData.results && Array.isArray(teamData.results)) {
+          const members = teamData.results;
+          const enhancedMembers = members.slice(0, 8).map(member => ({
+            ...member,
+            skills: Array.isArray(member.skills) ? member.skills : [],
+            years_experience: member.years_experience || 0,
+            is_leadership: member.is_leadership || false,
+            department: member.department || 'General',
+            achievements: Array.isArray(member.achievements) ? member.achievements : []
+          }));
+          
+          setState(prev => ({
+            ...prev,
+            teamMembers: enhancedMembers,
+            loading: false,
+            error: null
+          }));
+          return;
+        }
+      } catch (teamDataError) {
+        console.error('Error fetching team members:', teamDataError);
+        throw teamDataError; // Propagate to outer catch
       }
       
+      // If we get here, both attempts failed but didn't throw
+      throw new Error('Failed to retrieve valid team data');
+      
     } catch (error) {
-      console.error('Error fetching team members:', error);
+      console.error('Error in team member fetch process:', error);
       
       // Retry logic with exponential backoff
       if (retryCount < 3) {
@@ -306,8 +381,32 @@ const About: React.FC = () => {
         return;
       }
       
+      // Use mock data as final fallback
+      try {
+        console.log('Fetching mock team members as final fallback');
+        const mockResponse = await mockApiService.getTeamMembers();
+        console.log('Mock response received:', mockResponse);
+        
+        if (mockResponse && Array.isArray(mockResponse)) {
+          console.log('Setting team members from mock data array');
+          setState(prev => ({
+            ...prev,
+            teamMembers: mockResponse,
+            loading: false,
+            error: null
+          }));
+          return;
+        }
+        
+        // If we get here, the response format is unexpected
+        console.error('Unexpected mock data format:', mockResponse);
+      } catch (mockError) {
+        console.error('Error fetching mock team members:', mockError);
+      }
+      
       setState(prev => ({
         ...prev,
+        teamMembers: [],
         loading: false,
         error: 'Failed to load team members. Please try again later.'
       }));
@@ -426,7 +525,7 @@ const About: React.FC = () => {
           
           {/* Interactive Statistics */}
           <Suspense fallback={<div className="loading-stats">Loading Statistics...</div>}>
-            <InteractiveStats />
+            <InteractiveStats stats={companyStatsArray} />
           </Suspense>
           
           {/* Navigation Pills */}
