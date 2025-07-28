@@ -3,7 +3,8 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_page
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.cache import cache
 from django.db.models import Count, Q
@@ -301,3 +302,12 @@ def contact(request):
     Legacy contact view - redirects to class-based view.
     """
     return ContactView.as_view()(request)
+
+
+@require_GET
+def health_check(request):
+    """
+    Simple health check endpoint for deployment platforms.
+    Returns a 200 OK response to indicate the application is running.
+    """
+    return JsonResponse({"status": "ok"})

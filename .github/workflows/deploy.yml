@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install python-magic python-magic-bin
+
+    - name: Install Node.js dependencies
+      run: npm ci
+
+    - name: Build frontend
+      run: npm run build
+      env:
+        NODE_ENV: production
+        VITE_CSP_ENABLED: true
+        VITE_HTTPS_ONLY: true
+
+    - name: Collect static files
+      run: python manage.py collectstatic --noinput
+      env:
+        DJANGO_DEBUG: 'False'
+        DJANGO_SECURE_SSL_REDIRECT: 'True'
+        DJANGO_SESSION_COOKIE_SECURE: 'True'
+        DJANGO_CSRF_COOKIE_SECURE: 'True'
+
+    - name: Create security logs
+      run: |
+        touch security.log
+        chmod 640 security.log
+        touch django_errors.log
+        chmod 640 django_errors.log
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./staticfiles
+        cname: your-domain.com  # Replace with your custom domain if you have one

@@ -139,8 +139,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
   }, []);
 
   const cardClasses = viewMode === 'grid' 
-    ? "service-card glass-card"
-    : "service-card-list glass-card flex items-center p-6 space-x-6";
+    ? "service-card glass-card dark:bg-gray-800/50 dark:border-white"
+    : "service-card-list glass-card flex items-center p-6 space-x-6 dark:bg-gray-800/50 dark:border-white";
 
   return (
     <motion.div 
@@ -181,8 +181,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
             {image && !imageError ? (
               <div className="service-icon-container">
                 {!imageLoaded && (
-                  <div className="image-loading-skeleton">
-                    <div className="skeleton-shimmer"></div>
+                  <div className="image-loading-skeleton dark:bg-gray-800">
+                    <div className="skeleton-shimmer dark:bg-gray-700"></div>
                   </div>
                 )}
                 <img 
@@ -196,7 +196,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
               </div>
             ) : (
               <motion.div 
-                className="service-icon-placeholder"
+                className="service-icon-placeholder dark:text-white dark:bg-gray-800"
                 whileHover={{ 
                   rotate: 360,
                   scale: 1.1,
@@ -209,7 +209,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
           </motion.div>
           
           <motion.h3 
-            className="gradient-text service-title"
+            className="gradient-text service-title dark:text-white"
             whileHover={{ 
               scale: 1.05,
               transition: { duration: 0.2 }
@@ -219,7 +219,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
           </motion.h3>
           
           <motion.p 
-            className="service-description"
+            className="service-description dark:text-white"
             initial={{ opacity: 0.8 }}
             whileHover={{ opacity: 1 }}
           >
@@ -227,7 +227,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
           </motion.p>
           
           <motion.div 
-            className="price gradient-text"
+            className="price gradient-text dark:text-white"
             whileHover={{ 
               scale: 1.1,
               textShadow: '0 0 20px rgba(99, 102, 241, 0.5)',
@@ -241,7 +241,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
             {tech_stack.map((tech, index) => (
               <motion.span 
                 key={index} 
-                className="tech-badge"
+                className="tech-badge dark:text-white dark:bg-gray-700 dark:border-white"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * index }}
@@ -265,8 +265,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
             {image && !imageError ? (
               <div className="service-icon-container">
                 {!imageLoaded && (
-                  <div className="image-loading-skeleton w-20 h-20">
-                    <div className="skeleton-shimmer"></div>
+                  <div className="image-loading-skeleton w-20 h-20 dark:bg-gray-800">
+                    <div className="skeleton-shimmer dark:bg-gray-700"></div>
                   </div>
                 )}
                 <img 
@@ -280,7 +280,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
               </div>
             ) : (
               <motion.div 
-                className="w-20 h-20 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg text-3xl"
+                className="w-20 h-20 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg text-3xl dark:text-white"
                 whileHover={{ 
                   rotate: 360,
                   transition: { duration: 0.6 }
@@ -293,7 +293,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
           
           <div className="flex-1 min-w-0">
             <motion.h3 
-              className="gradient-text service-title text-xl font-bold mb-2"
+              className="gradient-text service-title text-xl font-bold mb-2 dark:text-white"
               whileHover={{ 
                 scale: 1.05,
                 transition: { duration: 0.2 }
@@ -303,7 +303,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
             </motion.h3>
             
             <motion.p 
-              className="service-description text-gray-600 dark:text-gray-300 mb-3 line-clamp-2"
+              className="service-description text-gray-600 dark:text-white mb-3 line-clamp-2"
               initial={{ opacity: 0.8 }}
               whileHover={{ opacity: 1 }}
             >
@@ -330,7 +330,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
                 </motion.span>
               ))}
               {tech_stack.length > 4 && (
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full text-sm">
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-white rounded-full text-sm">
                   +{tech_stack.length - 4}
                 </span>
               )}
@@ -339,7 +339,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, icon, pri
           
           <div className="flex-shrink-0 text-right">
             <motion.div 
-              className="price gradient-text text-lg font-semibold mb-2"
+              className="price gradient-text text-lg font-semibold mb-2 dark:text-white"
               whileHover={{ 
                 scale: 1.1,
                 textShadow: '0 0 20px rgba(99, 102, 241, 0.5)',

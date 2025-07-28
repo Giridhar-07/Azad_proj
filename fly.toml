@@ -1,0 +1,43 @@
+# fly.toml app configuration file
+app = "azayd-app"
+kill_signal = "SIGINT"
+kill_timeout = 5
+primary_region = "iad"
+
+[build]
+  builder = "paketobuildpacks/builder:base"
+
+[env]
+  PORT = "8000"
+  DJANGO_DEBUG = "False"
+  DJANGO_SECURE_SSL_REDIRECT = "True"
+  DJANGO_SESSION_COOKIE_SECURE = "True"
+  DJANGO_CSRF_COOKIE_SECURE = "True"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[http_service.checks]]
+    grace_period = "5s"
+    interval = "10s"
+    method = "GET"
+    path = "/health/"
+    timeout = "2s"
+
+[[statics]]
+  guest_path = "/app/staticfiles"
+  url_prefix = "/static"
+
+[[statics]]
+  guest_path = "/app/media"
+  url_prefix = "/media"

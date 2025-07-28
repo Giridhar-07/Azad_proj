@@ -193,7 +193,7 @@ const About: React.FC = () => {
     let teamMembersCount = 25; // Default fallback value
     
     try {
-      if (!state.teamMembers) {
+      if (state.teamMembers === undefined || state.teamMembers === null) {
         console.warn('Team members is undefined or null, using default count');
       } else if (!Array.isArray(state.teamMembers)) {
         console.warn('Team members is not an array, using default count:', state.teamMembers);
@@ -227,7 +227,7 @@ const About: React.FC = () => {
   const filteredTeamMembers = useMemo(() => {
     try {
       // Ensure teamMembers is an array
-      if (!state.teamMembers) {
+      if (state.teamMembers === undefined || state.teamMembers === null) {
         console.warn('Team members is undefined or null');
         return [];
       }
@@ -271,7 +271,7 @@ const About: React.FC = () => {
   // Get unique roles for filtering
   const availableRoles = useMemo(() => {
     try {
-      if (!state.teamMembers) {
+      if (state.teamMembers === undefined || state.teamMembers === null) {
         console.warn('Team members is undefined or null');
         return ['all'];
       }

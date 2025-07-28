@@ -427,7 +427,7 @@ const Home: React.FC = () => {
           
           {/* Services Grid with Dynamic Content */}
           <div className="services-grid">
-            {featuredServices.length > 0 ? (
+            {featuredServices && featuredServices.length > 0 ? (
               featuredServices.slice(0, 3).map((service, index) => (
                 <motion.div
                   key={service.id}
