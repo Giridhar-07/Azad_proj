@@ -14,18 +14,10 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/static/(.*)",
-      "dest": "/staticfiles/$1"
-    },
-    {
-      "src": "/media/(.*)",
-      "dest": "/media/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "azayd/wsgi.py"
+      "source": "/(.*)",
+      "destination": "azayd/wsgi.py"
     }
   ],
   "env": {

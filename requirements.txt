@@ -13,7 +13,7 @@ whitenoise==6.6.0
 bleach==6.1.0
 django-csp==3.8
 django-permissions-policy==4.18.0
-django-secure-storage==1.0.0
+
 
 # Deployment dependencies
 gunicorn==21.2.0
