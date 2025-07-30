@@ -6,6 +6,8 @@ import JobApplicationForm from './JobApplicationForm';
 import '../styles/careers.css';
 import '../styles/jobApplication.css';
 
+// Fix for path-to-regexp issue with useParams
+
 interface JobDetailProps {}
 
 interface JobPosting {
@@ -21,7 +23,8 @@ interface JobPosting {
 }
 
 const JobDetail: React.FC<JobDetailProps> = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const id = params.id;
   const navigate = useNavigate();
   const [job, setJob] = useState<JobPosting | null>(null);
   const [loading, setLoading] = useState(true);

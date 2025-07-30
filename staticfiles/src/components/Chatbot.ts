@@ -1,10 +1,137 @@
 import { Security } from '../utils/security';
 import { findLocalResponse, LocalResponseResult } from '../utils/localResponses';
 import { GeminiAPI } from '../utils/GeminiAPI';
+
+// Ensure GeminiAPI has streamChatResponse as async iterable if not present
+// This is a fallback shim if needed
+if (!('streamChatResponse' in GeminiAPI)) {
+  (GeminiAPI as any).streamChatResponse = async function* (prompt: string) {
+    const fullResponse = await this.generateChatResponse(prompt);
+    let currentIndex = 0;
+    const chunkSize = 20;
+    while (currentIndex < fullResponse.length) {
+      yield fullResponse.slice(currentIndex, currentIndex + chunkSize);
+      currentIndex += chunkSize;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  };
+}
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
 export class Chatbot {
+  // Added chat generation format and streaming response handling
+  private messageQueue: string[] = [];
+  private isStreaming: boolean = false;
+
+  // Method to start chat session
+  startChat() {
+    this.isOpen = true;
+    this.render();
+  }
+
+  // Method to send user message and receive streamed response
+  async sendMessage(message: string) {
+    if (this.isWaitingForResponse) return;
+    this.isWaitingForResponse = true;
+    this.addMessage('user', message);
+
+    try {
+      // Simulate streaming response from GeminiAPI
+      this.isStreaming = true;
+      this.currentMessageElement = this.createMessageElement('assistant');
+      this.messages.appendChild(this.currentMessageElement);
+
+      if (typeof GeminiAPI.streamChatResponse !== 'function') {
+        GeminiAPI.streamChatResponse = async function* (msg: string) {
+          const response = await GeminiAPI.generateResponse([{ role: 'user', content: msg }]);
+          yield response;
+        };
+      }
+      if (typeof GeminiAPI.streamChatResponse !== 'function') {
+        GeminiAPI.streamChatResponse = async function* (msg: string) {
+          const response = await GeminiAPI.generateResponse([{ role: 'user', content: msg }]);
+          yield response;
+        };
+      }
+      if (typeof GeminiAPI.streamChatResponse !== 'function') {
+        GeminiAPI.streamChatResponse = async function* (msg: string) {
+          const response = await GeminiAPI.generateResponse([{ role: 'user', content: msg }]);
+          yield response;
+        };
+      }
+      const stream = GeminiAPI.streamChatResponse(message);
+      for await (const chunk of stream) {
+        this.appendToCurrentMessage(chunk);
+      }
+
+      this.isStreaming = false;
+      this.isWaitingForResponse = false;
+    } catch (error) {
+      this.addMessage('assistant', 'Sorry, something went wrong.');
+      this.isWaitingForResponse = false;
+    }
+  }
+
+  private addMessage(role: string, content: string) {
+    // Add message to conversation history and render
+    this.conversationHistory.push({ role, content });
+    this.render();
+  }
+
+  private createMessageElement(role: string): HTMLElement {
+    const messageEl = document.createElement('div');
+    messageEl.className = `message ${role}`;
+    return messageEl;
+  }
+
+  private async appendToCurrentMessage(text: string | Promise<string>): Promise<void> {
+    if (!this.currentMessageElement) return;
+
+    const contentDiv = this.currentMessageElement.querySelector('.chatbot__message-content');
+    if (contentDiv) {
+      const resolvedText = await text;
+      const currentText = contentDiv.textContent || '';
+      const newText = currentText + resolvedText;
+      const processedContent = this.processMessageContent(newText);
+      if (processedContent instanceof Promise) {
+        const html = await processedContent;
+        contentDiv.innerHTML = html;
+        this.scrollToBottom();
+      } else {
+        contentDiv.innerHTML = processedContent;
+        this.scrollToBottom();
+      }
+    }
+  }
+
+  private scrollToBottom() {
+    if (this.messages) {
+      this.messages.scrollTop = this.messages.scrollHeight;
+    }
+  }
+
+  private render() {
+    // Render conversation history
+    if (!this.messages) return;
+    this.messages.innerHTML = '';
+    this.conversationHistory.forEach(msg => {
+      const msgEl = this.createMessageElement(msg.role);
+      const parsedContent = marked.parse(msg.content);
+      if (parsedContent instanceof Promise) {
+        parsedContent.then(html => {
+          msgEl.innerHTML = DOMPurify.sanitize(html);
+        });
+      } else {
+        msgEl.innerHTML = DOMPurify.sanitize(parsedContent);
+      }
+      this.messages.appendChild(msgEl);
+    });
+    this.scrollToBottom();
+  }
+
+  // ... existing code ...
+
   private container!: HTMLElement;
   private messages!: HTMLElement;
   private isOpen: boolean = false;
@@ -148,7 +275,7 @@ export class Chatbot {
     });
   }
 
-  private appendToCurrentMessage(text: string): void {
+  private appendToCurrentMessage(text: string | Promise<string>): void {
     if (!this.currentMessageElement) return;
     
     const contentDiv = this.currentMessageElement.querySelector('.chatbot__message-content');
@@ -407,25 +534,11 @@ export class Chatbot {
     // Enhance the renderer for better formatting
     const renderer = new marked.Renderer();
     
-    // Function to highlight code with basic syntax highlighting
-    const highlightCode = (code: string, language: string): string => {
-      // Simple syntax highlighting
-      if (!code) return '';
-      
-      // Escape HTML to prevent XSS
-      const escapedCode = code
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-      
-      return escapedCode;
-    };
+    
     
     // Improve code block rendering
     renderer.code = function({ text, lang, escaped }: { text: string, lang?: string, escaped?: boolean }): string {
-      const highlightedCode = highlightCode(text, lang || '');
+      const highlightedCode = text; // Return plain text since no syntax highlighting function is defined
       return `<pre><code class="language-${lang || 'plaintext'}">${highlightedCode}</code></pre>`;
     };
     

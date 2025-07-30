@@ -392,6 +392,7 @@ const Careers: React.FC = () => {
 
   const handleApply = useCallback((job: JobPosting) => {
     // Navigate to the job detail page using React Router
+    // Use job.id instead of job.slug if slug does not exist
     window.location.href = `/careers/${job.id}`;
   }, []);
 

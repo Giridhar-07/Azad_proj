@@ -27,6 +27,7 @@ export class GeminiAPI {
   private static lastRequestTime = 0;
   private static readonly MAX_REQUESTS_PER_MINUTE = 15; // Gemini has different rate limits
   private static readonly COOLDOWN_PERIOD = 60000; // 1 minute
+  static streamChatResponse: (msg: string) => AsyncGenerator<string, void, unknown>;
 
   /**
    * Check if we can make a request based on rate limiting
@@ -64,7 +65,7 @@ export class GeminiAPI {
       } else {
         contents.push({
           role: message.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: message.content }]
+          parts: [{ text: message.content }] as { text: string }[] as { text: string }[]
         });
       }
     }

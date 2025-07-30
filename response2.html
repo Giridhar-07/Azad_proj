@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-
+{% load static %}
 <html lang="en">
   <head>
     <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
@@ -13,15 +13,24 @@ window.$RefreshSig$ = () => (type) => type;</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="Azayd IT Consulting Services - Professional IT solutions and consulting services in Bengaluru" />
     <meta name="keywords" content="IT consulting, software development, digital transformation, Bengaluru, technology solutions" />
-    
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'nonce-lyw4stevuw9'; style-src 'self' 'unsafe-inline' 'nonce-lyw4stevuw9' https://fonts.googleapis.com; img-src 'self' data: https://*; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:3000 http://localhost:8000 http://127.0.0.1:8080 https://api.openai.com https://generativelanguage.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';">
-    
+    {% if is_debug %}
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'nonce-{{ csp_nonce }}'; style-src 'self' 'unsafe-inline' 'nonce-{{ csp_nonce }}' https://fonts.googleapis.com; img-src 'self' data: https://*; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:3000 http://localhost:8000 http://127.0.0.1:8080 https://api.openai.com https://generativelanguage.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    {% else %}
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-{{ csp_nonce }}'; style-src 'self' 'nonce-{{ csp_nonce }}' https://fonts.googleapis.com; img-src 'self' data: https://*; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com https://generativelanguage.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    {% endif %}
     <title>Azayd IT Consulting Services</title>
-    
+    {% if debug %}
     <!-- Development mode - direct script references -->
     <link rel="stylesheet" href="/src/style.css">
-    
-    <style nonce="lyw4stevuw9">
+    {% else %}
+    <!-- Production mode - static file references -->
+    <link rel="preload" href="/dist/static/index-EkTd_kSM.js" as="script" type="module">
+    <link rel="modulepreload" href="/dist/static/vendor-CbPAJjyB.js" crossorigin>
+    <link rel="modulepreload" href="/dist/static/three-PVHJxuLZ.js" crossorigin>
+    <link rel="modulepreload" href="/dist/static/animations-6bOz3eGd.js" crossorigin>
+    <link rel="stylesheet" href="/dist/static/index-Cfp6853o.css">
+    {% endif %}
+    <style nonce="{{ csp_nonce }}">
         body {
             -webkit-user-select: none; /* For Safari */
             user-select: none; /* For non-Safari browsers */
@@ -33,8 +42,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
   </head>
   <body>
     <div id="app"></div>
-    
+    {% if debug %}
     <script type="module" src="/src/main.tsx"></script>
-    
+    {% else %}
+    <script type="module" src="/dist/static/index-EkTd_kSM.js" nonce="{{ csp_nonce }}"></script>
+    {% endif %}
   </body>
 </html>

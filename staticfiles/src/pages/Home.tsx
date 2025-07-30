@@ -117,6 +117,14 @@ function AnimatedBackground() {
  * @component
  */
 const Home: React.FC = () => {
+  // Additional enhancements for accessibility and SEO
+  useEffect(() => {
+    document.title = "AZAYD - Home";
+    document.querySelector('meta[name="description"]')?.setAttribute('content', 'Welcome to AZAYD, your partner in digital transformation.');
+    AOS.refresh();
+  }, []);
+
+  // Existing code continues...
   // Navigation hook for programmatic routing
   const navigate = useNavigate();
   

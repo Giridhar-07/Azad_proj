@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import uriSafePlugin from './vite-uri-plugin'
+import fs from 'fs'
 
 // https://vitejs.dev/config/
 export default ({ mode }) => {
@@ -18,40 +19,13 @@ export default ({ mode }) => {
   ],
   // Use a different index.html file for development
   appType: 'spa',
-  root: process.cwd(),
+  root: 'public',
+  publicDir: '',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
     },
   },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    sourcemap: process.env.NODE_ENV !== 'production',
-    // Output assets to Django's static directory
-    assetsDir: 'static',
-    assetsInlineLimit: 4096,
-    // Optimize for production
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: process.env.NODE_ENV === 'production',
-        drop_debugger: process.env.NODE_ENV === 'production',
-      },
-    },
-    rollupOptions: {
-      input: resolve(__dirname, 'index.dev.html'),
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          animations: ['framer-motion', 'aos'],
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
-        },
-      },
-    },
-  },
-  // Configure static file handling
-  publicDir: 'public',
   server: {
     port: 3000,
     open: true,
@@ -82,6 +56,32 @@ export default ({ mode }) => {
       },
     },
   },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: process.env.NODE_ENV !== 'production',
+    // Output assets to Django's static directory
+    assetsDir: 'static',
+    assetsInlineLimit: 4096,
+    // Optimize for production
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: process.env.NODE_ENV === 'production',
+        drop_debugger: process.env.NODE_ENV === 'production',
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          animations: ['framer-motion', 'aos'],
+          three: ['three', '@react-three/fiber', '@react-three/drei'],
+        },
+      },
+    },
+  },
+  // Server configuration is already defined above
   // Handle URI encoding issues
   optimizeDeps: {
     esbuildOptions: {
@@ -89,6 +89,6 @@ export default ({ mode }) => {
     },
   },
   // Use environment variables for base URL
-  base: env.VITE_BASE_URL || '/dist/',
+  base: env.VITE_BASE_URL || '/',
 });
 }

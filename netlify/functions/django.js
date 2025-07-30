@@ -12,7 +12,7 @@ app.use('/static', express.static(path.join(__dirname, '../../staticfiles')));
 app.use('/media', express.static(path.join(__dirname, '../../media')));
 
 // Proxy requests to Django
-app.all('*', (req, res) => {
+app.all(/(.*)/, (req, res) => {
   // Set security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -21,7 +21,24 @@ app.all('*', (req, res) => {
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=()');
   
   // Run Django process
-  const django = spawn('python', ['manage.py', 'runserver', '0.0.0.0:8000']);
+  // Ensure environment variables are loaded
+  const { spawn } = require('child_process');
+  const djangoProcess = spawn('python', ['manage.py', 'runserver', '0.0.0.0:8000'], {
+    env: process.env,
+    stdio: 'inherit'
+  });
+
+  djangoProcess.on('close', (code) => {
+    console.log(`Django process exited with code ${code}`);
+  });
+
+  djangoProcess.on('error', (err) => {
+    console.error('Failed to start Django process:', err);
+  });
+
+  return djangoProcess;
+  const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+  const django = spawn(pythonCmd, ['manage.py', 'runserver', '0.0.0.0:8000']);
   
   let data = '';
   django.stdout.on('data', (chunk) => {

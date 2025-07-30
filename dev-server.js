@@ -114,7 +114,10 @@ async function startServer() {
       // Configure Vite
       root: __dirname,
       configFile: resolve(__dirname, 'vite.config.ts'),
-      plugins: [djangoTemplatePlugin()],
+      // Use our custom HTML file instead of Django template
+      plugins: [],
+      // Specify the custom HTML file
+      customIndex: resolve(__dirname, 'index.custom.html'),
       server: {
         port: PORT,
         strictPort: true,

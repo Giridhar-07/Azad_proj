@@ -55,6 +55,8 @@ A modern, responsive web application built with React, TypeScript, and Vite feat
 - `npm run serve` - Serve production build on port 3000
 - `npm run lint` - Type check with TypeScript
 - `npm run clean` - Clean build directory
+- `npm run deploy:netlify` - Deploy to Netlify (production)
+- `npm run deploy:netlify:preview` - Deploy to Netlify (preview)
 
 ## 🌐 Deployment
 
@@ -80,9 +82,10 @@ A modern, responsive web application built with React, TypeScript, and Vite feat
 
 #### Netlify
 1. Connect repository to Netlify
-2. Build command: `npm run build:prod`
+2. Build command: `npm run build`
 3. Publish directory: `dist`
 4. Add environment variables from `.env.production`
+5. Or use the provided script: `npm run deploy:netlify`
 
 #### Static Hosting (Apache/Nginx)
 1. Run `npm run build:prod`
@@ -98,6 +101,32 @@ The application features a comprehensive theme system with:
 - **Persistent Storage**: Theme choice saved in localStorage
 - **Smooth Transitions**: Animated theme switching
 - **CSS Variables**: Consistent theming across components
+
+## 🔧 Troubleshooting
+
+### Build Issues
+
+If you encounter build errors related to file resolution:
+
+1. **Vite Configuration**: Make sure the `vite.config.ts` file has the correct settings:
+   - Set `root: 'public'` to use the public directory as the root
+   - Set `base: '/'` for correct path resolution
+   - Ensure the `index.html` file in the public directory uses relative paths for scripts
+
+2. **Django Template Variables**: The project includes both Django templates and React. For building the frontend:
+   - Use the `public/index.html` file which doesn't contain Django template variables
+   - The root `index.html` file is for Django integration
+
+### Netlify Deployment Errors
+
+If you encounter a `TypeError: Missing parameter name at 1: https://git.new/pathToRegexpError` when deploying to Netlify:
+
+1. **Express 5 Compatibility**: This error occurs because Express 5 uses path-to-regexp 8.0.0 which has breaking changes in wildcard route handling.
+
+2. **Fix for Netlify Functions**: In your Netlify function files, replace wildcard routes:
+   - Change `app.all('*', ...)` to `app.all(/(.*)/, ...)`
+   - Change `app.use('*', ...)` to `app.use(/(.*)/, ...)`
+   - This applies to any route using the `*` wildcard character
 
 ### Theme Variables
 

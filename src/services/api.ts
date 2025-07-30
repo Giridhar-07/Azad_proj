@@ -581,13 +581,15 @@ export const apiService = {
       // Check if response data is valid JSON
       if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE html>')) {
         console.error('Received HTML instead of JSON data');
-        throw new Error('Invalid response format: received HTML instead of JSON');
+        // Return null instead of throwing error to avoid breaking UI
+        return null;
       }
       
       // Validate that response.data has the expected structure
       if (!response.data || typeof response.data !== 'object') {
         console.error('Invalid job posting data format:', response.data);
-        throw new Error('Invalid job posting data format');
+        // Return null instead of throwing error to avoid breaking UI
+        return null;
       }
       
       return response.data;
