@@ -18,9 +18,6 @@ export default ({ mode }) => {
     react()
   ],
   // Use a different index.html file for development
-  appType: 'spa',
-  root: 'public',
-  publicDir: '',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

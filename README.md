@@ -1,4 +1,30 @@
-# Azad Project - Modern React Web Application
+# Azad Project
+
+This project is being restructured to separate frontend and backend codebases.
+
+## New Directory Structure
+
+- frontend/
+  - src/
+  - public/
+  - vite.config.ts
+  - package.json
+
+- backend/
+  - website/
+  - manage.py
+  - requirements.txt
+
+## Deployment
+
+- Frontend will be deployed on Netlify.
+- Backend will be deployed on Vercel.
+
+## Notes
+
+- Update configuration files to reflect new paths.
+- Ensure environment variables are properly set.
+- Secure sensitive information.
 
 A modern, responsive web application built with React, TypeScript, and Vite featuring dark/light mode toggle, smooth animations, optimized performance, and enhanced security.
 

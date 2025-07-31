@@ -17,12 +17,11 @@
     "test": "jest",
     "collect-static": "python manage.py collectstatic --noinput",
     "migrate": "python manage.py migrate",
-    "deploy:vercel": "vercel --prod",
+    "deploy:vercel": "vercel",
     "deploy:netlify": "netlify deploy --prod",
     "deploy:netlify:preview": "netlify deploy",
     "deploy:firebase": "firebase deploy",
-    "deploy:gh-pages": "gh-pages -d staticfiles",
-    "vercel-build": "python manage.py collectstatic --noinput && python manage.py migrate"
+    "deploy:gh-pages": "gh-pages -d staticfiles"
   },
   "devDependencies": {
     "@types/aos": "^3.0.7",
@@ -79,5 +78,3 @@
   "description": "",
   "proxy": "http://localhost:8000"
 }
-
-

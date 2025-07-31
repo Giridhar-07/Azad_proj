@@ -1,61 +1,81 @@
-// Netlify function to serve Django application
 const serverless = require('serverless-http');
 const express = require('express');
-const path = require('path');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const { spawn } = require('child_process');
+const path = require('path');
 
-// Create express app
 const app = express();
 
-// Serve static files
+let djangoReady = false;
+
+function startDjango() {
+  return new Promise((resolve, reject) => {
+    if (djangoReady) {
+      return resolve();
+    }
+
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    const djangoProcess = spawn(pythonCmd, ['manage.py', 'runserver', '0.0.0.0:8000'], {
+      cwd: path.resolve(__dirname, '../../backend'), // Ensure Django runs in the correct directory
+      env: process.env,
+      stdio: 'pipe' // Use pipe to capture output
+    });
+
+    djangoProcess.stdout.on('data', (data) => {
+      console.log(`Django stdout: ${data}`);
+      if (data.toString().includes('Starting development server at')) {
+        console.log('Django server is ready.');
+        djangoReady = true;
+        resolve();
+      }
+    });
+
+    djangoProcess.stderr.on('data', (data) => {
+      console.error(`Django stderr: ${data}`);
+    });
+
+    djangoProcess.on('close', (code) => {
+      console.log(`Django process exited with code ${code}`);
+      djangoReady = false; // Reset status if process dies
+      if (code !== 0) {
+        reject(new Error(`Django process exited with code ${code}`))
+      }
+    });
+
+    djangoProcess.on('error', (err) => {
+      console.error('Failed to start Django process:', err);
+      reject(err);
+    });
+  });
+}
+
+// Middleware to ensure Django is running before proxying
+const ensureDjangoIsRunning = async (req, res, next) => {
+  try {
+    await startDjango();
+    next();
+  } catch (error) {
+    console.error('Error starting Django:', error);
+    res.status(500).send('Failed to start Django server.');
+  }
+};
+
+// Serve static files from the 'staticfiles' directory
 app.use('/static', express.static(path.join(__dirname, '../../staticfiles')));
 app.use('/media', express.static(path.join(__dirname, '../../media')));
 
-// Proxy requests to Django
-app.all(/(.*)/, (req, res) => {
-  // Set security headers
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=()');
-  
-  // Run Django process
-  // Ensure environment variables are loaded
-  const { spawn } = require('child_process');
-  const djangoProcess = spawn('python', ['manage.py', 'runserver', '0.0.0.0:8000'], {
-    env: process.env,
-    stdio: 'inherit'
-  });
+// Proxy all other requests to the Django server
+app.use('/', ensureDjangoIsRunning, createProxyMiddleware({
+  target: 'http://localhost:8000',
+  changeOrigin: true,
+  ws: true, // proxy websockets
+  onProxyReq: (proxyReq, req, res) => {
+    // You can add custom logic here, for example, adding headers
+  },
+  onError: (err, req, res) => {
+    console.error('Proxy error:', err);
+    res.status(502).send('Proxy error');
+  }
+}));
 
-  djangoProcess.on('close', (code) => {
-    console.log(`Django process exited with code ${code}`);
-  });
-
-  djangoProcess.on('error', (err) => {
-    console.error('Failed to start Django process:', err);
-  });
-
-  return djangoProcess;
-  const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-  const django = spawn(pythonCmd, ['manage.py', 'runserver', '0.0.0.0:8000']);
-  
-  let data = '';
-  django.stdout.on('data', (chunk) => {
-    data += chunk.toString();
-  });
-  
-  django.stderr.on('data', (chunk) => {
-    console.error(chunk.toString());
-  });
-  
-  django.on('close', (code) => {
-    if (code !== 0) {
-      return res.status(500).send('Django server error');
-    }
-    res.send(data);
-  });
-});
-
-// Export handler function
 module.exports.handler = serverless(app);
