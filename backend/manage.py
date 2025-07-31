@@ -2,6 +2,13 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
+
+# Add the project root to the Python path
+# The project root is the parent directory of the directory containing this file.
+# This ensures that the 'azayd' module can be found.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 def main():
     """Run administrative tasks."""

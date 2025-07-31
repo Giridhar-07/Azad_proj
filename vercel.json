@@ -2,44 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/public/dist",
-        "buildCommand": "cd frontend && npm install && npm run build"
-      }
-    },
-    {
       "src": "azayd/wsgi.py",
       "use": "@vercel/python",
       "config": {
-        "maxLambdaSize": "15mb"
+        "maxLambdaSize": "15mb",
+        "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput"
       }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "azayd/wsgi.py"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "azayd/wsgi.py"
-    },
-    {
-      "src": "/media/(.*)",
-      "dest": "azayd/wsgi.py"
-    },
-    {
       "src": "/static/(.*)",
-      "dest": "/frontend/public/dist/static/$1"
-    },
-    {
-      "handle": "filesystem"
+      "dest": "/staticfiles/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/public/dist/index.html"
+      "dest": "azayd/wsgi.py"
     }
   ]
 }

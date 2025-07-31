@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { mockApiService } from './mockApiService';
 
 // Create axios instance
@@ -65,6 +66,49 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// React Query Hooks
+export const useServices = (params?: {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  category?: string;
+  featured?: boolean;
+  ordering?: string;
+  price_min?: number;
+  price_max?: number;
+}) => {
+  return useQuery({
+    queryKey: ['services', params],
+    queryFn: () => apiService.getServices(params),
+  });
+};
+
+export const useService = (id: number) => {
+  return useQuery({
+    queryKey: ['service', id],
+    queryFn: () => apiService.getService(id),
+  });
+};
+
+export const useTeamMembers = (params?: {
+  page?: number;
+  role?: string;
+  department?: string;
+  search?: string;
+  ordering?: string;
+}) => {
+  return useQuery({
+    queryKey: ['team-members', params],
+    queryFn: () => apiService.getTeamMembers(params),
+  });
+};
+
+export const useContactForm = () => {
+  return useMutation({
+    mutationFn: (data: ContactMessage) => apiService.submitContactForm(data),
+  });
+};
 
 // API service interfaces
 export interface Service {

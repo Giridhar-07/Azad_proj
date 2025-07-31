@@ -9,7 +9,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('website.urls')),
     path('health/', health_check, name='health_check'),
-    # Serve React app for all other routes
-    path('', TemplateView.as_view(template_name='index.html')),
-    path('<path:path>', TemplateView.as_view(template_name='index.html')),
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
