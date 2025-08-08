@@ -4,24 +4,63 @@ from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 from .storage import SecureFileStorage
 
+
+# === Reusable Constants & Helpers ===
+
 def validate_file_size(file):
-    """Validate file size (max 5MB)."""
     max_size = 5 * 1024 * 1024  # 5MB
     if file.size > max_size:
         raise ValidationError(f'File size cannot exceed 5MB. Current size: {file.size/(1024*1024):.2f}MB')
     return file
 
-class Service(models.Model):
-    title = models.CharField(max_length=200)
+IMAGE_VALIDATORS = [
+    FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']),
+    validate_file_size,
+]
+
+RESUME_VALIDATORS = [
+    FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']),
+    validate_file_size,
+]
+
+def secure_file_field(upload_to, validators):
+    return models.FileField(
+        upload_to=upload_to,
+        blank=True,
+        null=True,
+        storage=SecureFileStorage(),
+        validators=validators
+    )
+
+
+# === Mixins ===
+
+class AutoSlugMixin(models.Model):
     slug = models.SlugField(unique=True, blank=True)
+    slug_source_field = 'title'
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = getattr(self, self.slug_source_field, '')
+            self.slug = slugify(base)
+        super().save(*args, **kwargs)
+
+
+# === Models ===
+
+class Service(AutoSlugMixin):
+    title = models.CharField(max_length=200)
     description = models.TextField()
     icon = models.CharField(max_length=50, help_text='Font Awesome icon name without the fa- prefix')
     image = models.ImageField(
-        upload_to='services/', 
-        blank=True, 
+        upload_to='services/',
+        blank=True,
         null=True,
         storage=SecureFileStorage(),
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif']), validate_file_size],
+        validators=IMAGE_VALIDATORS,
         help_text='Image file (max 5MB, jpg/png/gif only)'
     )
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -29,17 +68,12 @@ class Service(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
-
     def __str__(self):
-        return self.title
+        return f"{self.title}"
 
-class JobPosting(models.Model):
+
+class JobPosting(AutoSlugMixin):
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, blank=True)
     department = models.CharField(max_length=100)
     location = models.CharField(max_length=100)
     description = models.TextField()
@@ -57,54 +91,43 @@ class JobPosting(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.title
-        
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Job Posting"
         verbose_name_plural = "Job Postings"
 
+    def __str__(self):
+        return f"{self.title} ({self.department})"
+
+
 class TeamMember(models.Model):
-    """
-    Enhanced TeamMember model with additional fields for modern requirements.
-    """
-    name = models.CharField(max_length=100, help_text="Full name of the team member")
-    position = models.CharField(max_length=100, help_text="Job title or position")
-    department = models.CharField(max_length=50, blank=True, help_text="Department or team")
-    bio = models.TextField(help_text="Professional biography")
+    name = models.CharField(max_length=100)
+    position = models.CharField(max_length=100)
+    department = models.CharField(max_length=50, blank=True)
+    bio = models.TextField()
     image = models.ImageField(
-        upload_to='team/', 
+        upload_to='team/',
         storage=SecureFileStorage(),
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']), validate_file_size],
+        validators=IMAGE_VALIDATORS,
         help_text="Profile image (max 5MB, jpg/png only)"
     )
-    
-    # Social media links
-    linkedin = models.URLField(blank=True, help_text="LinkedIn profile URL")
-    twitter = models.URLField(blank=True, help_text="Twitter profile URL")
-    github = models.URLField(blank=True, help_text="GitHub profile URL")
-    email = models.EmailField(blank=True, help_text="Professional email address")
-    
-    # Professional details
-    skills = models.JSONField(default=list, blank=True, help_text="List of skills and technologies")
-    years_experience = models.PositiveIntegerField(default=0, help_text="Years of professional experience")
-    achievements = models.JSONField(default=list, blank=True, help_text="Notable achievements and certifications")
-    
-    # Status and ordering
-    is_active = models.BooleanField(default=True, help_text="Is this member currently active?")
-    is_leadership = models.BooleanField(default=False, help_text="Is this member part of leadership team?")
-    order = models.IntegerField(default=0, help_text="Display order (lower numbers appear first)")
-    
-    # Timestamps
+
+    linkedin = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    github = models.URLField(blank=True)
+    email = models.EmailField(blank=True)
+
+    skills = models.JSONField(default=list, blank=True)
+    years_experience = models.PositiveIntegerField(default=0)
+    achievements = models.JSONField(default=list, blank=True)
+
+    is_active = models.BooleanField(default=True)
+    is_leadership = models.BooleanField(default=False)
+    order = models.IntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['order', 'name']
         verbose_name = "Team Member"
@@ -114,28 +137,24 @@ class TeamMember(models.Model):
             models.Index(fields=['is_leadership', 'order']),
             models.Index(fields=['department']),
         ]
-    
+
     def __str__(self):
         return f"{self.name} - {self.position}"
-    
+
     @property
     def full_name(self):
-        """Return the full name (same as name for now, but could be enhanced)."""
         return self.name
-    
+
     @property
     def primary_skills(self):
-        """Return the first 5 skills for display purposes."""
         return self.skills[:5] if self.skills else []
-    
+
     def save(self, *args, **kwargs):
-        """Override save to handle automatic leadership detection."""
-        # Auto-detect leadership based on position keywords
         leadership_keywords = ['director', 'manager', 'lead', 'head', 'ceo', 'cto', 'founder', 'vp']
         if any(keyword in self.position.lower() for keyword in leadership_keywords):
             self.is_leadership = True
-        
         super().save(*args, **kwargs)
+
 
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)
@@ -146,41 +165,27 @@ class ContactMessage(models.Model):
     is_read = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.name} - {self.subject}"
+        return f"{self.name} ({self.email}) - {self.subject}"
+
 
 class ResumeSubmission(models.Model):
-    """Model for storing resume submissions from career applicants."""
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
     message = models.TextField()
-    resume_file = models.FileField(
-        upload_to='resumes/', 
-        blank=True, 
-        null=True,
-        storage=SecureFileStorage(),
-        validators=[
-            FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), 
-            validate_file_size
-        ],
-        help_text='Resume file (max 5MB, PDF or Word document)'
-    )
-    resume_link = models.URLField(blank=True, null=True, help_text="Link to resume on Google Drive or similar")
+    resume_file = secure_file_field('resumes/', RESUME_VALIDATORS)
+    resume_link = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_reviewed = models.BooleanField(default=False)
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('new', 'New Submission'),
-            ('reviewing', 'Under Review'),
-            ('contacted', 'Contacted'),
-            ('interview', 'Interview Scheduled'),
-            ('rejected', 'Not Selected'),
-            ('hired', 'Hired')
-        ],
-        default='new'
-    )
-    notes = models.TextField(blank=True, help_text="Internal notes about this application")
+    status = models.CharField(max_length=20, choices=[
+        ('new', 'New Submission'),
+        ('reviewing', 'Under Review'),
+        ('contacted', 'Contacted'),
+        ('interview', 'Interview Scheduled'),
+        ('rejected', 'Not Selected'),
+        ('hired', 'Hired')
+    ], default='new')
+    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -196,53 +201,31 @@ class ResumeSubmission(models.Model):
         return f"{self.name} - {self.created_at.strftime('%Y-%m-%d')}"
 
     def clean(self):
-        """Ensure that either resume_file or resume_link is provided."""
         if not self.resume_file and not self.resume_link:
             raise ValidationError("Either a resume file or a link to a resume must be provided.")
         return super().clean()
 
 
 class JobApplication(models.Model):
-    """Model for storing job applications for specific job postings."""
-    job = models.ForeignKey(
-        JobPosting, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        related_name='applications',
-        help_text="The job posting this application is for"
-    )
+    job = models.ForeignKey(JobPosting, on_delete=models.SET_NULL, null=True, related_name='applications')
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
-    cover_letter = models.TextField(help_text="Cover letter or additional information")
-    resume_file = models.FileField(
-        upload_to='job_applications/', 
-        blank=True, 
-        null=True,
-        storage=SecureFileStorage(),
-        validators=[
-            FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), 
-            validate_file_size
-        ],
-        help_text='Resume file (max 5MB, PDF or Word document)'
-    )
-    resume_link = models.URLField(blank=True, null=True, help_text="Link to resume on Google Drive or similar")
+    cover_letter = models.TextField()
+    resume_file = secure_file_field('job_applications/', RESUME_VALIDATORS)
+    resume_link = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_reviewed = models.BooleanField(default=False)
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('new', 'New Application'),
-            ('reviewing', 'Under Review'),
-            ('contacted', 'Contacted'),
-            ('interview', 'Interview Scheduled'),
-            ('rejected', 'Not Selected'),
-            ('hired', 'Hired')
-        ],
-        default='new'
-    )
-    notes = models.TextField(blank=True, help_text="Internal notes about this application")
-    email_sent = models.BooleanField(default=False, help_text="Whether confirmation email was sent")
+    status = models.CharField(max_length=20, choices=[
+        ('new', 'New Application'),
+        ('reviewing', 'Under Review'),
+        ('contacted', 'Contacted'),
+        ('interview', 'Interview Scheduled'),
+        ('rejected', 'Not Selected'),
+        ('hired', 'Hired')
+    ], default='new')
+    notes = models.TextField(blank=True)
+    email_sent = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
@@ -260,7 +243,6 @@ class JobApplication(models.Model):
         return f"{self.name} - {job_title} - {self.created_at.strftime('%Y-%m-%d')}"
 
     def clean(self):
-        """Ensure that either resume_file or resume_link is provided."""
         if not self.resume_file and not self.resume_link:
             raise ValidationError("Either a resume file or a link to a resume must be provided.")
         return super().clean()
