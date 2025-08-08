@@ -72,6 +72,16 @@ class Service(AutoSlugMixin):
         return f"{self.title}"
 
 
+# Add this in models.py (JobPosting)
+
+class JobPostingManager(models.Manager):
+    def active(self):
+        return self.filter(is_active=True)
+
+class JobPosting(models.Model):
+    ...
+    objects = JobPostingManager()
+
 class JobPosting(AutoSlugMixin):
     title = models.CharField(max_length=200)
     department = models.CharField(max_length=100)
@@ -98,6 +108,21 @@ class JobPosting(AutoSlugMixin):
 
     def __str__(self):
         return f"{self.title} ({self.department})"
+
+
+
+# Add this for TeamMember
+
+class TeamMemberManager(models.Manager):
+    def active(self):
+        return self.filter(is_active=True)
+    
+    def ordered(self):
+        return self.active().order_by('order', 'name')
+
+class TeamMember(models.Model):
+    ...
+    objects = TeamMemberManager()
 
 
 class TeamMember(models.Model):
